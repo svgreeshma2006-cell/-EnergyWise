@@ -1,0 +1,43 @@
+{
+  "did_you_know": [
+    "Standby mode (phantom load) can account for up to 10% of your total electricity bill.",
+    "Air conditioners are typically the #1 energy consumer in a home, contributing 25–40% of electricity bills.",
+    "Switching from incandescent to LED bulbs can cut lighting energy use by up to 85%.",
+    "A full refrigerator is more energy-efficient than a half-empty one — it retains cold better.",
+    "Washing clothes in cold water uses 90% less energy than washing in hot water.",
+    "Unplugging your phone charger when not in use can save up to 5 kWh per year per charger.",
+    "Using a microwave instead of an electric oven for small meals saves about 80% energy.",
+    "Solar water heaters can reduce water heating costs by 50–80%.",
+    "Ceiling fans use 98% less energy than air conditioners.",
+    "A dripping faucet can waste 3,000+ gallons of water per year, indirectly wasting pump energy."
+  ],
+  "myths_vs_facts": [
+    {
+      "myth": "Turning lights on and off wastes more electricity than leaving them on.",
+      "fact": "This is FALSE for modern LED and CFL bulbs. Switching them off saves energy every single time."
+    },
+    {
+      "myth": "Screensavers save energy on monitors.",
+      "fact": "FALSE. Screensavers don't reduce power consumption. Setting the monitor to sleep mode does."
+    },
+    {
+      "myth": "Charging your phone overnight damages the battery and wastes electricity.",
+      "fact": "PARTIALLY TRUE. Modern phones stop charging at 100%, but keeping them at 100% long-term degrades battery health."
+    },
+    {
+      "myth": "Ceiling fans cool the room temperature.",
+      "fact": "FALSE. Fans cool people, not rooms, by creating a wind-chill effect. Turn them off when you leave."
+    },
+    {
+      "myth": "New appliances don't need energy-saving habits.",
+      "fact": "FALSE. Even energy-efficient appliances waste power if used carelessly (e.g., leaving fridge door open)."
+    }
+  ],
+  "energy_saving_goals": {
+    "beginner": { "label": "Beginner Saver", "monthly_reduction_pct": 5,  "tips_count": 3 },
+    "moderate": { "label": "Moderate Saver", "monthly_reduction_pct": 15, "tips_count": 7 },
+    "advanced": { "label": "Energy Champion","monthly_reduction_pct": 30, "tips_count": 12 }
+  },
+  "carbon_factor_kg_per_kwh": 0.82,
+  "tree_absorption_kg_co2_per_year": 21
+}

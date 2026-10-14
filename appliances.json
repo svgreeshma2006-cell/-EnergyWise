@@ -1,0 +1,28 @@
+{
+  "appliances": [
+    { "name": "Refrigerator",         "category": "Kitchen",    "avg_wattage": 150,  "daily_hours": 24, "monthly_kwh": 108,  "efficiency_tip": "Set temperature to 37°F (3°C) for fridge and 0°F (-18°C) for freezer. Keep coils dust-free." },
+    { "name": "Air Conditioner",       "category": "Cooling",    "avg_wattage": 1500, "daily_hours": 8,  "monthly_kwh": 360,  "efficiency_tip": "Set thermostat to 24–26°C. Use ceiling fans alongside AC to spread cool air." },
+    { "name": "Water Heater (Electric)","category": "Heating",   "avg_wattage": 4000, "daily_hours": 2,  "monthly_kwh": 240,  "efficiency_tip": "Set water heater to 49°C. Insulate the tank and pipes. Use a timer to heat only during off-peak hours." },
+    { "name": "Washing Machine",       "category": "Laundry",    "avg_wattage": 500,  "daily_hours": 1,  "monthly_kwh": 15,   "efficiency_tip": "Wash clothes in cold water. Run full loads only. Use the high-spin setting to reduce drying time." },
+    { "name": "Clothes Dryer",         "category": "Laundry",    "avg_wattage": 5000, "daily_hours": 0.5,"monthly_kwh": 75,   "efficiency_tip": "Clean the lint filter after every use. Air-dry when possible." },
+    { "name": "Dishwasher",            "category": "Kitchen",    "avg_wattage": 1800, "daily_hours": 0.5,"monthly_kwh": 27,   "efficiency_tip": "Run full loads only. Use air-dry instead of heat-dry mode." },
+    { "name": "Electric Oven",         "category": "Kitchen",    "avg_wattage": 2400, "daily_hours": 0.5,"monthly_kwh": 36,   "efficiency_tip": "Avoid preheating for long periods. Use a microwave for small meals." },
+    { "name": "Microwave Oven",        "category": "Kitchen",    "avg_wattage": 1000, "daily_hours": 0.3,"monthly_kwh": 9,    "efficiency_tip": "Prefer microwave over oven for reheating — it uses 80% less energy." },
+    { "name": "Television (LED 55in)", "category": "Electronics","avg_wattage": 100,  "daily_hours": 5,  "monthly_kwh": 15,   "efficiency_tip": "Enable auto-brightness. Turn off rather than leaving on standby." },
+    { "name": "Desktop Computer",      "category": "Electronics","avg_wattage": 200,  "daily_hours": 6,  "monthly_kwh": 36,   "efficiency_tip": "Enable sleep mode after 10 minutes of inactivity. Use a laptop which uses 80% less power." },
+    { "name": "Laptop",                "category": "Electronics","avg_wattage": 50,   "daily_hours": 6,  "monthly_kwh": 9,    "efficiency_tip": "Lower screen brightness. Unplug charger when fully charged." },
+    { "name": "LED Bulb (10W)",        "category": "Lighting",   "avg_wattage": 10,   "daily_hours": 6,  "monthly_kwh": 1.8,  "efficiency_tip": "Use motion sensors or timers. Replace any remaining incandescent bulbs." },
+    { "name": "Incandescent Bulb (60W)","category":"Lighting",   "avg_wattage": 60,   "daily_hours": 6,  "monthly_kwh": 10.8, "efficiency_tip": "Replace with LED equivalents immediately — they use 85% less energy." },
+    { "name": "Ceiling Fan",           "category": "Cooling",    "avg_wattage": 75,   "daily_hours": 8,  "monthly_kwh": 18,   "efficiency_tip": "Turn off fans when leaving the room. Use anti-clockwise in summer for cooling effect." },
+    { "name": "Electric Iron",         "category": "Appliances", "avg_wattage": 1000, "daily_hours": 0.3,"monthly_kwh": 9,    "efficiency_tip": "Iron in one session per week rather than daily small sessions." },
+    { "name": "Water Pump",            "category": "Utilities",  "avg_wattage": 750,  "daily_hours": 1,  "monthly_kwh": 22.5, "efficiency_tip": "Run pump during off-peak hours. Fix leaky pipes to reduce pumping frequency." },
+    { "name": "EV Charger (Level 2)",  "category": "Transport",  "avg_wattage": 7200, "daily_hours": 1,  "monthly_kwh": 216,  "efficiency_tip": "Charge during off-peak night hours to save on time-of-use tariffs." },
+    { "name": "Space Heater",          "category": "Heating",    "avg_wattage": 1500, "daily_hours": 4,  "monthly_kwh": 180,  "efficiency_tip": "Use only in occupied rooms. Keep the room well-insulated." },
+    { "name": "Pool Pump",             "category": "Utilities",  "avg_wattage": 1500, "daily_hours": 6,  "monthly_kwh": 270,  "efficiency_tip": "Use a variable-speed pump and run during off-peak hours." },
+    { "name": "Gaming Console",        "category": "Electronics","avg_wattage": 150,  "daily_hours": 3,  "monthly_kwh": 13.5, "efficiency_tip": "Enable energy-saving mode. Turn off instead of using rest/standby mode." }
+  ],
+  "average_household_monthly_kwh": 877,
+  "peak_hours": ["6:00 AM - 9:00 AM", "5:00 PM - 9:00 PM"],
+  "off_peak_hours": ["10:00 PM - 6:00 AM"],
+  "average_cost_per_kwh_inr": 7.5
+}

@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>EnergyWise AI Agent — Electricity Consumption Awareness</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060d1a;--surface:#0f1f36;--surface2:#162944;--surface3:#1e3556;
+  --border:#1e3a5f;--text:#e8f4fd;--muted:#7bafd4;--accent:#00c6ff;
+  --green:#00e676;--yellow:#ffd740;--red:#ff5252;--purple:#b388ff;
+  --orange:#ffab40;--teal:#1de9b6;
+}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ── NAV ── */
+nav{background:rgba(6,13,26,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;position:sticky;top:0;z-index:200;height:56px}
+.nav-brand{font-size:20px;font-weight:800;color:var(--accent);margin-right:36px;white-space:nowrap;letter-spacing:-0.5px;text-shadow:0 0 20px rgba(0,198,255,0.4)}
+.nav-brand span{color:var(--yellow)}
+.nav-links{display:flex;gap:0;flex:1;overflow-x:auto;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-links button{background:none;border:none;color:var(--muted);padding:0 16px;height:56px;cursor:pointer;font-size:13px;font-weight:500;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+.nav-links button:hover,.nav-links button.active{color:var(--text);border-bottom-color:var(--accent)}
+.nav-status{margin-left:auto;font-size:12px;color:var(--green);white-space:nowrap;padding-left:20px;display:flex;align-items:center;gap:6px}
+.pulse{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+
+/* ── PAGES ── */
+.page{display:none;padding:28px 28px 60px;max-width:1200px;margin:0 auto;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,#0a1628 0%,#0f2744 50%,#0a1628 100%);border:1px solid var(--border);border-radius:16px;padding:48px 40px;margin-bottom:28px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(0,198,255,0.08) 0%,transparent 70%);pointer-events:none}
+.hero h1{font-size:32px;font-weight:800;line-height:1.2;margin-bottom:12px}
+.hero h1 span{color:var(--accent)}
+.hero p{color:var(--muted);font-size:15px;max-width:600px;margin-bottom:24px}
+.hero-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+
+/* ── GRIDS ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+@media(max-width:900px){.grid4{grid-template-columns:1fr 1fr}.grid5{grid-template-columns:1fr 1fr}.hero{padding:28px 20px}.hero h1{font-size:22px}}
+@media(max-width:600px){.grid2,.grid3,.grid4,.grid5{grid-template-columns:1fr}}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.card-glow{box-shadow:0 0 20px rgba(0,198,255,0.05)}
+.card h3{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.metric-val{font-size:28px;font-weight:800;color:var(--text)}
+.metric-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.metric-delta{font-size:12px;margin-top:4px}
+.delta-up{color:var(--red)}
+.delta-down{color:var(--green)}
+
+/* ── SECTION ── */
+h2{font-size:17px;font-weight:700;margin:28px 0 14px;display:flex;align-items:center;gap:8px}
+h2 .icon{font-size:18px}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:28px 0 14px}
+.section-head h2{margin:0}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700}
+.badge-blue{background:rgba(0,198,255,0.15);color:var(--accent);border:1px solid rgba(0,198,255,0.3)}
+.badge-green{background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.3)}
+.badge-yellow{background:rgba(255,215,64,0.12);color:var(--yellow);border:1px solid rgba(255,215,64,0.3)}
+.badge-red{background:rgba(255,82,82,0.12);color:var(--red);border:1px solid rgba(255,82,82,0.3)}
+.badge-purple{background:rgba(179,136,255,0.12);color:var(--purple);border:1px solid rgba(179,136,255,0.3)}
+.badge-orange{background:rgba(255,171,64,0.12);color:var(--orange);border:1px solid rgba(255,171,64,0.3)}
+
+/* ── BUTTONS ── */
+.btn{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#060d1a}
+.btn-primary:hover{background:#33d6ff;transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-green{background:var(--green);color:#060d1a}
+.btn-sm{padding:6px 14px;font-size:12px}
+
+/* ── PROGRESS BARS ── */
+.bar-wrap{background:var(--surface2);border-radius:99px;height:8px;overflow:hidden;margin-top:8px}
+.bar{height:100%;border-radius:99px;transition:width 1s ease}
+
+/* ── ALERTS ── */
+.alert{border-radius:10px;padding:14px 16px;margin:8px 0;font-size:13px;line-height:1.6}
+.alert-red{background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.3);color:#ffcdd2}
+.alert-yellow{background:rgba(255,215,64,0.08);border:1px solid rgba(255,215,64,0.3);color:#fff9c4}
+.alert-green{background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.3);color:#c8e6c9}
+.alert-blue{background:rgba(0,198,255,0.08);border:1px solid rgba(0,198,255,0.3);color:#b3e5fc}
+
+/* ── TABLES ── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--surface2);border:1px solid var(--border);padding:10px 14px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+td{border:1px solid var(--border);padding:10px 14px;vertical-align:top}
+tr:hover td{background:var(--surface2)}
+
+/* ── FORMS ── */
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;letter-spacing:.3px}
+input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:13px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,198,255,0.1)}
+textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;gap:12px}
+.form-row-4{grid-template-columns:2fr 1fr 1fr 1fr}
+.form-row-3{grid-template-columns:1fr 1fr 1fr}
+.form-row-2{grid-template-columns:1fr 1fr}
+
+/* ── CHAT ── */
+#chat-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;height:440px;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.msg{max-width:78%;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.7;white-space:pre-wrap}
+.msg-user{background:linear-gradient(135deg,#0d47a1,#1565c0);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.msg-bot{background:var(--surface2);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-bottom-left-radius:3px}
+.msg-bot .agent-tag{font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.5px;margin-bottom:4px}
+.chat-input-row{display:flex;gap:10px;margin-top:12px}
+.chat-input-row input{flex:1}
+
+/* ── SVG CHARTS ── */
+.chart-container{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative}
+.chart-title{font-size:13px;font-weight:700;margin-bottom:16px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+svg text{font-family:-apple-system,"Segoe UI",system-ui,sans-serif}
+
+/* ── AGENT CARDS ── */
+.agent-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden}
+.agent-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.agent-analysis::before{background:var(--accent)}
+.agent-education::before{background:var(--green)}
+.agent-recommendation::before{background:var(--yellow)}
+.agent-conversation::before{background:var(--purple)}
+.agent-icon{font-size:32px;margin-bottom:12px}
+.agent-name{font-size:15px;font-weight:700;margin-bottom:6px}
+.agent-desc{font-size:13px;color:var(--muted)}
+.agent-status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;margin-top:10px}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;flex-wrap:wrap}
+.tab{padding:7px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s}
+.tab.active{background:var(--accent);color:#060d1a}
+.tab:hover:not(.active){color:var(--text)}
+
+/* ── TIMELINE ── */
+.timeline-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.timeline-time{font-size:12px;color:var(--muted);width:80px;flex-shrink:0;font-weight:600}
+.timeline-bar-wrap{flex:1;background:var(--surface2);border-radius:4px;height:20px;overflow:hidden;position:relative}
+.timeline-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:700;color:#060d1a;transition:width 1s ease}
+.timeline-val{font-size:12px;color:var(--muted);width:70px;text-align:right;flex-shrink:0}
+
+/* ── TARIFF ── */
+.tariff-slab{border-radius:8px;padding:12px 16px;margin-bottom:8px;font-size:13px}
+
+/* ── DOT ── */
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0}
+
+/* ── TOOLTIP ── */
+.tooltip-wrap{position:relative;display:inline-block}
+.tooltip{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#1e3556;border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:11px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s;z-index:999}
+.tooltip-wrap:hover .tooltip{opacity:1}
+
+/* ── RANGE SLIDER ── */
+input[type=range]{padding:0;height:4px;-webkit-appearance:none;background:var(--surface2);border-radius:99px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ NAV ═══════════════════════ -->
+<nav>
+  <div class="nav-brand">⚡ Energy<span>Wise</span></div>
+  <div class="nav-links">
+    <button class="active" onclick="nav('home',this)">🏠 Home</button>
+    <button onclick="nav('dashboard',this)">📊 Dashboard</button>
+    <button onclick="nav('agents',this)">🤖 AI Agents</button>
+    <button onclick="nav('profile',this)">📋 My Profile</button>
+    <button onclick="nav('analysis',this)">🔍 Analysis</button>
+    <button onclick="nav('tariff',this)">💰 Tariffs & RAG</button>
+    <button onclick="nav('tips',this)">💡 Tips</button>
+    <button onclick="nav('learn',this)">📚 Learn</button>
+    <button onclick="nav('calc',this)">🔌 Calculator</button>
+    <button onclick="nav('chat',this)">💬 Chat</button>
+  </div>
+  <div class="nav-status"><div class="pulse"></div>IBM Granite Active</div>
+</nav>
+
+<!-- ═══════════════════════ HOME ═══════════════════════ -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-badges">
+      <span class="badge badge-blue">IBM watsonx.ai</span>
+      <span class="badge badge-purple">IBM Granite LLM</span>
+      <span class="badge badge-green">IBM Langflow</span>
+      <span class="badge badge-yellow">Multi-Agent System</span>
+      <span class="badge badge-orange">PS #20</span>
+    </div>
+    <h1>AI Agent for <span>Electricity</span><br/>Consumption Awareness</h1>
+    <p>An IBM watsonx.ai powered multi-agent platform that analyses your household energy patterns, explains tariffs in plain language, recommends personalised savings, and answers your energy questions — all in real time.</p>
+    <div class="hero-btns">
+      <button class="btn btn-primary" onclick="nav('dashboard',document.querySelectorAll('.nav-links button')[1])">📊 View Dashboard</button>
+      <button class="btn btn-outline" onclick="nav('chat',document.querySelectorAll('.nav-links button')[9])">💬 Chat with AI Agent</button>
+    </div>
+  </div>
+
+  <div class="grid4">
+    <div class="card card-glow"><h3>Avg Monthly Bill</h3><div class="metric-val">₹6,577</div><div class="metric-sub">India avg household · 877 kWh</div></div>
+    <div class="card"><h3>CO₂ per kWh</h3><div class="metric-val" style="color:var(--red)">0.82 kg</div><div class="metric-sub">India grid emission factor</div></div>
+    <div class="card"><h3>Max Savings Possible</h3><div class="metric-val" style="color:var(--green)">35%</div><div class="metric-sub">With AI-guided best practices</div></div>
+    <div class="card"><h3>LED vs Incandescent</h3><div class="metric-val" style="color:var(--yellow)">85%</div><div class="metric-sub">Less energy with LED bulbs</div></div>
+  </div>
+
+  <h2><span class="icon">🎯</span> Problem Statement</h2>
+  <div class="card" style="margin-bottom:16px">
+    <p style="color:var(--muted);font-size:13px;line-height:1.8">Efficient energy management is vital for household savings and grid sustainability, but consumers often struggle with identifying high-consumption appliances, understanding tariff structures, and tracking real-time electricity waste. Without personalised, real-time guidance, many consumers fail to recognize wasteful habits, leading to unexpectedly high utility bills and unnecessary energy consumption.</p>
+  </div>
+
+  <h2><span class="icon">🤖</span> Multi-Agent Architecture</h2>
+  <div class="grid4">
+    <div class="agent-card agent-analysis">
+      <div class="agent-icon">📈</div>
+      <div class="agent-name">Consumption Analysis Agent</div>
+      <div class="agent-desc">Analyses hourly meter telemetry, identifies high-load periods, baseline standby draw, and unexpected spikes.</div>
+      <div class="agent-status"><span class="dot" style="background:var(--accent)"></span><span style="color:var(--accent)">ACTIVE</span></div>
+    </div>
+    <div class="agent-card agent-education">
+      <div class="agent-icon">🎓</div>
+      <div class="agent-name">Energy Education Agent</div>
+      <div class="agent-desc">Translates technical metrics into relatable daily analogies. Explains BEE Star ratings, tariffs and ToD pricing.</div>
+      <div class="agent-status"><span class="dot" style="background:var(--green)"></span><span style="color:var(--green)">ACTIVE</span></div>
+    </div>
+    <div class="agent-card agent-recommendation">
+      <div class="agent-icon">💡</div>
+      <div class="agent-name">Energy Saving Agent</div>
+      <div class="agent-desc">Generates targeted cost-reduction tips: thermostat adjustments, load shifting, phantom load elimination.</div>
+      <div class="agent-status"><span class="dot" style="background:var(--yellow)"></span><span style="color:var(--yellow)">ACTIVE</span></div>
+    </div>
+    <div class="agent-card agent-conversation">
+      <div class="agent-icon">💬</div>
+      <div class="agent-name">Conversational Agent</div>
+      <div class="agent-desc">Handles natural language Q&amp;A, delivers contextual explanations and budget forecasts via IBM Granite.</div>
+      <div class="agent-status"><span class="dot" style="background:var(--purple)"></span><span style="color:var(--purple)">ACTIVE</span></div>
+    </div>
+  </div>
+
+  <h2><span class="icon">✨</span> Key Features</h2>
+  <div class="grid3">
+    <div class="card"><div style="font-size:22px;margin-bottom:8px">📊</div><div style="font-weight:700;margin-bottom:4px">Consumption Pattern Analysis</div><div style="color:var(--muted);font-size:13px">Ingest smart meter logs, identify high-load periods, standby draw, and unexpected spikes with anomaly flagging.</div></div>
+    <div class="card"><div style="font-size:22px;margin-bottom:8px">📖</div><div style="font-weight:700;margin-bottom:4px">Energy Knowledge RAG</div><div style="color:var(--muted);font-size:13px">Fetch and explain electricity tariffs, ToD peak pricing slabs, BEE Star and ENERGY STAR efficiency ratings.</div></div>
+    <div class="card"><div style="font-size:22px;margin-bottom:8px">🎯</div><div style="font-weight:700;margin-bottom:4px">Actionable Tips</div><div style="color:var(--muted);font-size:13px">Targeted steps to curb waste — thermostat adjustments, shifting heavy loads, eliminating phantom loads.</div></div>
+    <div class="card"><div style="font-size:22px;margin-bottom:8px">💬</div><div style="font-weight:700;margin-bottom:4px">Conversational Interaction</div><div style="color:var(--muted);font-size:13px">Text-based Q&amp;A with IBM Granite LLM delivering clear, contextual explanations and budget forecasts.</div></div>
+    <div class="card"><div style="font-size:22px;margin-bottom:8px">📈</div><div style="font-weight:700;margin-bottom:4px">Visualization Dashboard</div><div style="color:var(--muted);font-size:13px">Hourly/daily trends, peak vs off-peak comparisons, vampire standby waste, and reduction target tracking.</div></div>
+    <div class="card"><div style="font-size:22px;margin-bottom:8px">🔌</div><div style="font-weight:700;margin-bottom:4px">Appliance Calculator</div><div style="color:var(--muted);font-size:13px">Instant energy cost and CO₂ estimates for any appliance by wattage, hours, and quantity.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ DASHBOARD ═══════════════════════ -->
+<div id="page-dashboard" class="page">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <div><h1 style="font-size:22px;font-weight:800;margin-bottom:4px">📊 Energy Dashboard</h1><div style="color:var(--muted);font-size:13px">Real-time consumption monitoring &amp; visualisation</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="refreshDashboard()">↻ Refresh</button>
+      <button class="btn btn-primary btn-sm">Export Report</button>
+    </div>
+  </div>
+
+  <div class="grid5" id="dash-metrics"></div>
+
+  <div class="grid2" style="margin-top:20px">
+    <div class="chart-container">
+      <div class="chart-title">Hourly Consumption Today (kWh)</div>
+      <svg id="hourly-chart" width="100%" height="200" viewBox="0 0 500 200"></svg>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">7-Day Daily Usage (kWh)</div>
+      <svg id="daily-chart" width="100%" height="200" viewBox="0 0 500 200"></svg>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:16px">
+    <div class="chart-container">
+      <div class="chart-title">Peak vs Off-Peak Split</div>
+      <svg id="peak-chart" width="100%" height="200" viewBox="0 0 500 200"></svg>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">Appliance Category Breakdown</div>
+      <svg id="cat-chart" width="100%" height="200" viewBox="0 0 500 200"></svg>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:16px">
+    <div class="card">
+      <h3>Hourly Load Profile</h3>
+      <div id="hourly-timeline"></div>
+    </div>
+    <div class="card">
+      <h3>Vampire / Standby Waste Monitor</h3>
+      <div id="vampire-section"></div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px">
+    <div class="card">
+      <h3>Reduction Target Progress</h3>
+      <div id="target-progress"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ AI AGENTS ═══════════════════════ -->
+<div id="page-agents" class="page">
+  <h1 style="font-size:22px;font-weight:800;margin-bottom:6px">🤖 Multi-Agent System</h1>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:28px">Four specialised IBM Granite-powered agents working together — each with a focused role in your energy awareness journey.</p>
+
+  <div class="grid2">
+    <div class="agent-card agent-analysis" style="padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="font-size:40px">📈</div>
+        <span class="badge badge-blue">Analysis Agent</span>
+      </div>
+      <div style="font-size:18px;font-weight:700;margin:12px 0 8px">Consumption Analysis Agent</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:16px">Ingests hourly smart meter telemetry, detects high-load periods, baselines standby draw, and flags anomalous spikes using statistical analysis.</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--accent)">Capabilities:</div>
+      <ul style="color:var(--muted);font-size:13px;padding-left:16px;line-height:2">
+        <li>Hourly consumption pattern detection</li>
+        <li>Anomaly spike flagging (+2σ threshold)</li>
+        <li>Standby / phantom load baselining</li>
+        <li>Peak vs off-peak load analysis</li>
+        <li>Month-over-month trend comparison</li>
+      </ul>
+      <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted)">
+        <strong style="color:var(--accent)">IBM Granite Prompt Role:</strong> Analyse the following hourly consumption data and identify anomalies, peak periods, and standby waste patterns...
+      </div>
+    </div>
+    <div class="agent-card agent-education" style="padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="font-size:40px">🎓</div>
+        <span class="badge badge-green">Education Agent</span>
+      </div>
+      <div style="font-size:18px;font-weight:700;margin:12px 0 8px">Energy Education Agent</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:16px">Translates complex technical metrics into relatable daily analogies. Explains BEE Star ratings, electricity tariff slabs, and ToD pricing in plain language.</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--green)">Knowledge RAG Sources:</div>
+      <ul style="color:var(--muted);font-size:13px;padding-left:16px;line-height:2">
+        <li>BEE Star Rating database (1–5 star appliances)</li>
+        <li>ENERGY STAR efficiency benchmarks</li>
+        <li>State electricity tariff slabs (BESCOM, TATA, etc.)</li>
+        <li>Time-of-Day (ToD) pricing structures</li>
+        <li>Carbon emission factors by grid region</li>
+      </ul>
+      <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted)">
+        <strong style="color:var(--green)">IBM Granite Prompt Role:</strong> Explain the following energy metric in simple terms a household user would understand, using a relatable analogy...
+      </div>
+    </div>
+    <div class="agent-card agent-recommendation" style="padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="font-size:40px">💡</div>
+        <span class="badge badge-yellow">Savings Agent</span>
+      </div>
+      <div style="font-size:18px;font-weight:700;margin:12px 0 8px">Energy Saving Recommendation Agent</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:16px">Generates targeted, prioritised cost-reduction recommendations based on your actual consumption profile — from zero-cost habits to strategic upgrades.</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--yellow)">Recommendation Types:</div>
+      <ul style="color:var(--muted);font-size:13px;padding-left:16px;line-height:2">
+        <li>Thermostat optimisation (24–26°C AC)</li>
+        <li>Peak-hour load shifting schedules</li>
+        <li>Phantom/standby load elimination</li>
+        <li>BEE 5-star appliance upgrade ROI</li>
+        <li>Solar PV payback analysis</li>
+      </ul>
+      <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted)">
+        <strong style="color:var(--yellow)">IBM Granite Prompt Role:</strong> Based on the consumption report, generate 5 prioritised, actionable energy-saving tips with estimated kWh and cost savings...
+      </div>
+    </div>
+    <div class="agent-card agent-conversation" style="padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="font-size:40px">💬</div>
+        <span class="badge badge-purple">Chat Agent</span>
+      </div>
+      <div style="font-size:18px;font-weight:700;margin:12px 0 8px">Conversational Interaction Agent</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:16px">Handles natural language Q&amp;A about electricity usage, bills, and energy practices. Delivers clear, contextual responses with conversation memory and budget forecasting.</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--purple)">Conversation Capabilities:</div>
+      <ul style="color:var(--muted);font-size:13px;padding-left:16px;line-height:2">
+        <li>Billing question &amp; forecast Q&amp;A</li>
+        <li>Appliance-specific energy queries</li>
+        <li>Tariff and ToD pricing explanation</li>
+        <li>Carbon footprint budgeting</li>
+        <li>6-turn conversation memory context</li>
+      </ul>
+      <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted)">
+        <strong style="color:var(--purple)">IBM Model:</strong> ibm/granite-13b-chat-v2 via watsonx.ai API · Intent routing · Household context injection
+      </div>
+    </div>
+  </div>
+
+  <h2><span class="icon">🔄</span> Langflow Orchestration Flow</h2>
+  <div class="card">
+    <div style="font-family:monospace;font-size:13px;line-height:2.2;color:var(--muted);background:var(--surface2);border-radius:8px;padding:20px;overflow-x:auto">
+      <span style="color:var(--accent)">ChatInput</span> → <span style="color:var(--yellow)">IntentRouter</span> → <span style="color:var(--text)">┬</span> <span style="color:var(--accent)">ConsumptionAnalysisTool</span><br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--text)">├</span> <span style="color:var(--green)">EnergyEducationTool (RAG)</span><br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--text)">├</span> <span style="color:var(--yellow)">SavingsRecommendationTool</span><br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--text)">└</span> <span style="color:var(--purple)">ConversationMemory</span><br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--accent)">IBM Granite LLM</span> ← SystemPrompt<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--teal)">ResponseFormatter</span> → <span style="color:var(--text)">ChatOutput</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PROFILE ═══════════════════════ -->
+<div id="page-profile" class="page">
+  <h1 style="font-size:22px;font-weight:800;margin-bottom:6px">📋 Household Profile</h1>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:24px">Enter your appliances to get a personalised energy analysis. Pre-loaded with a sample household.</p>
+  <div class="card" style="margin-bottom:20px">
+    <div class="form-row form-row-4" style="margin-bottom:16px">
+      <div><label>Household Name</label><input id="prof-name" value="Sharma Family"/></div>
+      <div><label>City</label><input id="prof-city" value="Bangalore"/></div>
+      <div><label>Occupants</label><input id="prof-occ" type="number" value="4" min="1" max="20"/></div>
+      <div><label>Rate ₹/kWh: <span id="rate-show" style="color:var(--accent)">7.5</span></label><input type="range" id="prof-rate" min="3" max="15" step="0.5" value="7.5" oninput="document.getElementById('rate-show').textContent=this.value" style="margin-top:10px"/></div>
+    </div>
+  </div>
+  <h2><span class="icon">🔌</span> Appliances</h2>
+  <div id="appliance-list" style="margin-bottom:12px"></div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--accent)">+ Add New Appliance</div>
+    <div class="form-row form-row-4" style="margin-bottom:10px">
+      <div><label>Name</label><input id="new-name" placeholder="e.g. Air Conditioner"/></div>
+      <div><label>Wattage (W)</label><input id="new-watt" type="number" value="1500"/></div>
+      <div><label>Daily Hours</label><input id="new-hrs" type="number" value="8" step="0.5"/></div>
+      <div><label>Quantity</label><input id="new-qty" type="number" value="1" min="1"/></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <select id="new-cat" style="width:180px"><option>Cooling</option><option>Heating</option><option>Kitchen</option><option>Laundry</option><option>Electronics</option><option>Lighting</option><option>Utilities</option><option>Transport</option><option>Appliances</option></select>
+      <button class="btn btn-outline" onclick="addAppliance()">+ Add Appliance</button>
+      <button class="btn btn-primary" onclick="saveProfile()">💾 Save & Generate Analysis</button>
+    </div>
+  </div>
+  <div id="profile-result" style="display:none;margin-top:20px">
+    <div class="alert alert-green" id="profile-msg"></div>
+    <div class="grid4" style="margin-top:14px" id="profile-metrics"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ ANALYSIS ═══════════════════════ -->
+<div id="page-analysis" class="page">
+  <h1 style="font-size:22px;font-weight:800;margin-bottom:6px">🔍 Consumption Analysis</h1>
+  <div id="no-profile-msg" class="alert alert-yellow">⚠️ Set up your household profile first (📋 My Profile tab).</div>
+  <div id="analysis-body" style="display:none">
+    <div class="grid4" id="analysis-metrics"></div>
+    <div class="grid2" style="margin-top:20px">
+      <div>
+        <h2><span class="icon">🔝</span> Top Energy Consumers</h2>
+        <div id="top-consumers"></div>
+      </div>
+      <div>
+        <h2><span class="icon">📂</span> Category Breakdown</h2>
+        <div id="cat-breakdown"></div>
+      </div>
+    </div>
+    <h2><span class="icon">⚠️</span> High-Usage Anomaly Flags</h2>
+    <div id="alerts-section"></div>
+    <h2><span class="icon">💰</span> Savings Potential</h2>
+    <div class="grid3" id="savings-cards"></div>
+    <h2><span class="icon">📋</span> Full Appliance Register</h2>
+    <div style="overflow-x:auto"><table><thead><tr><th>Appliance</th><th>Category</th><th>Wattage</th><th>Daily Hrs</th><th>Qty</th><th>Monthly kWh</th><th>Monthly Cost</th><th>Share %</th></tr></thead><tbody id="reg-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ TARIFF & RAG ═══════════════════════ -->
+<div id="page-tariff" class="page">
+  <h1 style="font-size:22px;font-weight:800;margin-bottom:6px">💰 Tariffs, ToD Pricing & Energy RAG</h1>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:24px">Knowledge Retrieval-Augmented Generation — real electricity tariff data, BEE Star ratings, and Time-of-Day pricing explained simply.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTariffTab('slabs',this)">📊 Tariff Slabs</button>
+    <button class="tab" onclick="showTariffTab('tod',this)">⏰ ToD Pricing</button>
+    <button class="tab" onclick="showTariffTab('bee',this)">⭐ BEE Star Ratings</button>
+    <button class="tab" onclick="showTariffTab('energy-star',this)">🌍 ENERGY STAR</button>
+  </div>
+
+  <div id="tariff-slabs">
+    <h2><span class="icon">📊</span> BESCOM (Bangalore) Domestic Tariff Slabs</h2>
+    <div class="grid2" style="margin-bottom:16px">
+      <div>
+        <div class="tariff-slab" style="background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.3)"><div style="font-weight:700;color:var(--green)">Slab 1: 0–30 units</div><div style="font-size:20px;font-weight:800;color:var(--green)">₹0.00/kWh</div><div style="font-size:12px;color:var(--muted)">Free for BPL consumers</div></div>
+        <div class="tariff-slab" style="background:rgba(0,198,255,0.08);border:1px solid rgba(0,198,255,0.3)"><div style="font-weight:700;color:var(--accent)">Slab 2: 31–100 units</div><div style="font-size:20px;font-weight:800;color:var(--accent)">₹4.90/kWh</div><div style="font-size:12px;color:var(--muted)">Low consumption rate</div></div>
+        <div class="tariff-slab" style="background:rgba(255,215,64,0.08);border:1px solid rgba(255,215,64,0.3)"><div style="font-weight:700;color:var(--yellow)">Slab 3: 101–200 units</div><div style="font-size:20px;font-weight:800;color:var(--yellow)">₹6.90/kWh</div><div style="font-size:12px;color:var(--muted)">Medium consumption rate</div></div>
+        <div class="tariff-slab" style="background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.3)"><div style="font-weight:700;color:var(--red)">Slab 4: 201–500 units</div><div style="font-size:20px;font-weight:800;color:var(--red)">₹8.05/kWh</div><div style="font-size:12px;color:var(--muted)">High consumption rate</div></div>
+        <div class="tariff-slab" style="background:rgba(255,82,82,0.12);border:1px solid rgba(255,82,82,0.5)"><div style="font-weight:700;color:var(--red)">Slab 5: 500+ units</div><div style="font-size:20px;font-weight:800;color:var(--red)">₹9.00/kWh</div><div style="font-size:12px;color:var(--muted)">Very high consumption rate</div></div>
+      </div>
+      <div class="card">
+        <h3>Tariff Slab Calculator</h3>
+        <div style="margin-bottom:12px"><label>Monthly Units Consumed (kWh)</label><input id="tariff-units" type="number" value="300" oninput="calcTariff()"/></div>
+        <div id="tariff-result"></div>
+        <div class="alert alert-blue" style="margin-top:12px;font-size:12px">💡 <strong>RAG Insight:</strong> Keeping consumption under 200 units/month puts you in Slab 3. Every unit over 500 is charged at ₹9/unit — nearly double Slab 1!</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tariff-tod" style="display:none">
+    <h2><span class="icon">⏰</span> Time-of-Day (ToD) Pricing</h2>
+    <div class="grid3" style="margin-bottom:16px">
+      <div class="alert alert-red"><strong>🔴 Peak Hours</strong><br/>6:00 AM – 9:00 AM<br/>5:00 PM – 9:00 PM<br/><br/>Surcharge: +20% on base rate<br/>Avoid: AC, washing machine, EV charging</div>
+      <div class="alert alert-yellow"><strong>🟡 Normal Hours</strong><br/>9:00 AM – 5:00 PM<br/><br/>Base rate applies<br/>Good for: daytime cooking, work devices</div>
+      <div class="alert alert-green"><strong>🟢 Off-Peak Hours</strong><br/>9:00 PM – 6:00 AM<br/><br/>Discount: –15% on base rate<br/>Best for: EV charging, dishwasher, laundry</div>
+    </div>
+    <div class="card"><h3>ToD Bill Estimator</h3>
+      <div class="form-row form-row-3">
+        <div><label>Peak Units (kWh)</label><input id="tod-peak" type="number" value="150" oninput="calcTod()"/></div>
+        <div><label>Normal Units (kWh)</label><input id="tod-normal" type="number" value="200" oninput="calcTod()"/></div>
+        <div><label>Off-Peak Units (kWh)</label><input id="tod-offpeak" type="number" value="100" oninput="calcTod()"/></div>
+      </div>
+      <div id="tod-result" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <div id="tariff-bee" style="display:none">
+    <h2><span class="icon">⭐</span> BEE Star Rating Guide</h2>
+    <div class="alert alert-blue" style="margin-bottom:16px">The Bureau of Energy Efficiency (BEE) Star Label rates appliances 1–5 stars. <strong>5-star</strong> = most efficient. Each star step typically saves 10–20% energy.</div>
+    <table>
+      <thead><tr><th>Appliance</th><th>1 Star (kWh/yr)</th><th>3 Star (kWh/yr)</th><th>5 Star (kWh/yr)</th><th>Savings (1→5)</th><th>Annual ₹ Saved</th></tr></thead>
+      <tbody>
+        <tr><td>Split AC (1.5T)</td><td>1380</td><td>1050</td><td>840</td><td><span class="badge badge-green">39%</span></td><td style="color:var(--green)">₹4,050</td></tr>
+        <tr><td>Refrigerator (250L)</td><td>560</td><td>400</td><td>290</td><td><span class="badge badge-green">48%</span></td><td style="color:var(--green)">₹2,025</td></tr>
+        <tr><td>Washing Machine</td><td>400</td><td>300</td><td>220</td><td><span class="badge badge-green">45%</span></td><td style="color:var(--green)">₹1,350</td></tr>
+        <tr><td>LED TV (43")</td><td>220</td><td>160</td><td>110</td><td><span class="badge badge-green">50%</span></td><td style="color:var(--green)">₹832</td></tr>
+        <tr><td>Ceiling Fan</td><td>310</td><td>260</td><td>200</td><td><span class="badge badge-green">35%</span></td><td style="color:var(--green)">₹832</td></tr>
+        <tr><td>Water Heater (15L)</td><td>790</td><td>620</td><td>490</td><td><span class="badge badge-green">38%</span></td><td style="color:var(--green)">₹2,250</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="tariff-energy-star" style="display:none">
+    <h2><span class="icon">🌍</span> ENERGY STAR Benchmarks</h2>
+    <div class="alert alert-blue" style="margin-bottom:16px">ENERGY STAR is the international standard for energy efficiency. Products must use 10–50% less energy than standard models to earn certification.</div>
+    <div class="grid3">
+      <div class="card"><div style="font-size:28px;margin-bottom:8px">❄️</div><div style="font-weight:700;margin-bottom:4px">Room Air Conditioner</div><div style="color:var(--green);font-size:13px">Saves up to 15% vs standard</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Min EER: 11.0 BTU/W · Annual saving: ~₹3,200</div></div>
+      <div class="card"><div style="font-size:28px;margin-bottom:8px">🧊</div><div style="font-weight:700;margin-bottom:4px">Refrigerator</div><div style="color:var(--green);font-size:13px">Saves 9–15% vs standard</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Min EF: 1.72 · Annual saving: ~₹1,800</div></div>
+      <div class="card"><div style="font-size:28px;margin-bottom:8px">💻</div><div style="font-weight:700;margin-bottom:4px">Computer / Laptop</div><div style="color:var(--green);font-size:13px">Saves up to 30–65%</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Idle power &lt;15W · Sleep &lt;5W</div></div>
+      <div class="card"><div style="font-size:28px;margin-bottom:8px">🖨️</div><div style="font-weight:700;margin-bottom:4px">Printer</div><div style="color:var(--green);font-size:13px">Saves 20–40% vs standard</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Sleep mode &lt;1W</div></div>
+      <div class="card"><div style="font-size:28px;margin-bottom:8px">📺</div><div style="font-weight:700;margin-bottom:4px">Television</div><div style="color:var(--green);font-size:13px">Saves 25–30% vs standard</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Max on-mode: 100W for 55"</div></div>
+      <div class="card"><div style="font-size:28px;margin-bottom:8px">💡</div><div style="font-weight:700;margin-bottom:4px">LED Lighting</div><div style="color:var(--green);font-size:13px">Saves 75–85% vs incandescent</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Min efficacy: 90 lm/W · Life: 15,000+ hrs</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ TIPS ═══════════════════════ -->
+<div id="page-tips" class="page">
+  <h1 style="font-size:22px;font-weight:800;margin-bottom:6px">💡 Energy Saving Tips</h1>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Personalised, prioritised recommendations from the Energy Saving Recommendation Agent.</p>
+  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+    <button class="btn btn-primary btn-sm" onclick="filterTips('All')">All Tips</button>
+    <button class="btn btn-outline btn-sm" onclick="filterTips('High')">🔴 High Priority</button>
+    <button class="btn btn-outline btn-sm" onclick="filterTips('Medium')">🟡 Medium</button>
+    <button class="btn btn-outline btn-sm" onclick="filterTips('Low')">🟢 Low</button>
+    <button class="btn btn-outline btn-sm" onclick="filterTips('zero')">💸 Zero Cost</button>
+    <button class="btn btn-outline btn-sm" onclick="filterTips('Cooling')">❄️ Cooling</button>
+    <button class="btn btn-outline btn-sm" onclick="filterTips('Heating')">🔥 Heating</button>
+    <button class="btn btn-outline btn-sm" onclick="filterTips('Lighting')">💡 Lighting</button>
+  </div>
+  <div id="tips-list"></div>
+</div>
+
+<!-- ═══════════════════════ LEARN ═══════════════════════ -->
+<div id="page-learn" class="page">
+  <h1 style="font-size:22px;font-weight:800;margin-bottom:6px">📚 Energy Education Hub</h1>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Powered by the Energy Education Agent — facts, myths, peak hours, seasonal tips, and carbon awareness.</p>
+  <div class="tabs">
+    <button class="tab active" onclick="learnTab('facts',this)">💡 Facts</button>
+    <button class="tab" onclick="learnTab('myths',this)">🔍 Myths vs Facts</button>
+    <button class="tab" onclick="learnTab('peak',this)">⏰ Peak Hours</button>
+    <button class="tab" onclick="learnTab('seasonal',this)">🌡️ Seasonal</button>
+    <button class="tab" onclick="learnTab('carbon',this)">🌱 Carbon</button>
+    <button class="tab" onclick="learnTab('phantom',this)">👻 Phantom Load</button>
+  </div>
+  <div id="learn-facts"><div id="facts-content"></div></div>
+  <div id="learn-myths" style="display:none"><div id="myths-content"></div></div>
+  <div id="learn-peak" style="display:none">
+    <div class="grid2">
+      <div><div class="alert alert-red"><strong>🔴 Peak Hours: 6–9 AM &amp; 5–9 PM</strong><br/>Grid demand is highest — costs 20% more on ToD tariffs.<br/><br/>Avoid running: AC, washing machine, dishwasher, EV charger, iron, oven.</div><div class="alert alert-green" style="margin-top:8px"><strong>🟢 Off-Peak: 10 PM – 6 AM</strong><br/>15% cheaper on ToD tariffs. Best time for heavy loads.<br/><br/>Schedule: EV charging, pool pump, water heater timer, laundry.</div></div>
+      <div class="card"><h3>Load Shifting Savings</h3><div id="peak-savings-table"></div></div>
+    </div>
+  </div>
+  <div id="learn-seasonal" style="display:none">
+    <div style="display:flex;gap:8px;margin-bottom:16px"><button class="btn btn-outline" onclick="showSeason('summer')">☀️ Summer</button><button class="btn btn-outline" onclick="showSeason('winter')">❄️ Winter</button><button class="btn btn-outline" onclick="showSeason('monsoon')">🌧️ Monsoon</button></div>
+    <div id="seasonal-content"></div>
+  </div>
+  <div id="learn-carbon" style="display:none">
+    <div class="card">
+      <h3>Carbon Footprint Calculator</h3>
+      <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap">
+        <div><label>Monthly kWh</label><input id="carbon-kwh" type="number" value="877" style="width:150px" oninput="calcCarbon()"/></div>
+      </div>
+      <div id="carbon-result"></div>
+    </div>
+  </div>
+  <div id="learn-phantom" style="display:none">
+    <div class="alert alert-yellow" style="margin-bottom:16px"><strong>👻 Phantom Load (Standby Power)</strong> — Appliances in standby mode still draw power 24/7. This silent drain can account for 5–10% of your total electricity bill.</div>
+    <table>
+      <thead><tr><th>Appliance</th><th>Standby Wattage</th><th>Monthly kWh</th><th>Monthly Cost ₹</th><th>Fix</th></tr></thead>
+      <tbody id="phantom-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════ CALCULATOR ═══════════════════════ -->
+<div id="page-calc" class="page">
+  <h1 style="font-size:22px;font-weight:800;margin-bottom:6px">🔌 Appliance Energy Calculator</h1>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:24px">Instant energy consumption, cost, and CO₂ estimates for any appliance.</p>
+  <div class="card" style="margin-bottom:20px">
+    <div class="form-row form-row-4" style="margin-bottom:14px">
+      <div><label>Appliance Name</label><input id="calc-name" value="Air Conditioner"/></div>
+      <div><label>Wattage (W)</label><input id="calc-watt" type="number" value="1500"/></div>
+      <div><label>Daily Hours</label><input id="calc-hrs" type="number" value="8" step="0.5"/></div>
+      <div><label>Quantity</label><input id="calc-qty" type="number" value="1" min="1"/></div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+      <div><label>Rate ₹/kWh</label><input id="calc-rate" type="number" value="7.5" step="0.5" style="width:110px"/></div>
+      <div><label>Days/Month</label><input id="calc-days" type="number" value="30" style="width:110px"/></div>
+      <button class="btn btn-primary" onclick="runCalc()">⚡ Calculate</button>
+    </div>
+  </div>
+  <div id="calc-result" style="display:none">
+    <div class="grid4" id="calc-metrics" style="margin-bottom:16px"></div>
+    <div id="calc-analogies" style="margin-bottom:16px"></div>
+    <div id="calc-chart-wrap" class="chart-container">
+      <div class="chart-title">Cost Comparison: Your Appliance vs Common Alternatives</div>
+      <svg id="calc-chart" width="100%" height="180" viewBox="0 0 500 180"></svg>
+    </div>
+  </div>
+  <h2><span class="icon">📋</span> Common Appliances Reference</h2>
+  <div style="overflow-x:auto"><table><thead><tr><th>Appliance</th><th>Category</th><th>Wattage</th><th>Daily Hrs</th><th>Monthly kWh</th><th>Monthly Cost ₹</th><th>CO₂ kg/mo</th></tr></thead><tbody id="ref-tbody"></tbody></table></div>
+</div>
+
+<!-- ═══════════════════════ CHAT ═══════════════════════ -->
+<div id="page-chat" class="page">
+  <h1 style="font-size:22px;font-weight:800;margin-bottom:4px">💬 Chat with EnergyWise</h1>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px"><span class="badge badge-purple">Conversational Interaction Agent</span><span class="badge badge-blue">IBM Granite LLM</span><span style="font-size:12px;color:var(--muted)">watsonx.ai · ibm/granite-13b-chat-v2</span></div>
+  <div id="chat-box"></div>
+  <div class="chat-input-row">
+    <input id="chat-input" placeholder="Ask anything about your electricity usage, bills, or energy saving..." onkeydown="if(event.key==='Enter')sendChat()"/>
+    <button class="btn btn-primary" onclick="sendChat()">Send</button>
+    <button class="btn btn-outline" onclick="clearChat()">Clear</button>
+  </div>
+  <div style="margin-top:14px">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Suggested questions:</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="sugg-row"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ JAVASCRIPT ═══════════════════════ -->
+<script>
+// ═══════════════ DATA ═══════════════
+const DB=[
+  {name:"Refrigerator",cat:"Kitchen",w:150,h:24,mo:108,tip:"Set to 37°F/3°C. Keep coils dust-free."},
+  {name:"Air Conditioner",cat:"Cooling",w:1500,h:8,mo:360,tip:"Set thermostat to 24–26°C. Use ceiling fans alongside."},
+  {name:"Water Heater",cat:"Heating",w:4000,h:2,mo:240,tip:"Set to 49°C. Insulate tank. Use timer for off-peak."},
+  {name:"Washing Machine",cat:"Laundry",w:500,h:1,mo:15,tip:"Cold water. Full loads only."},
+  {name:"Clothes Dryer",cat:"Laundry",w:5000,h:0.5,mo:75,tip:"Clean lint filter. Air-dry when possible."},
+  {name:"Dishwasher",cat:"Kitchen",w:1800,h:0.5,mo:27,tip:"Full loads. Use air-dry mode."},
+  {name:"Electric Oven",cat:"Kitchen",w:2400,h:0.5,mo:36,tip:"Use microwave for small meals."},
+  {name:"Microwave",cat:"Kitchen",w:1000,h:0.3,mo:9,tip:"80% less energy than oven for reheating."},
+  {name:"LED TV (55\")",cat:"Electronics",w:100,h:5,mo:15,tip:"Enable auto-brightness. Turn off instead of standby."},
+  {name:"Desktop Computer",cat:"Electronics",w:200,h:6,mo:36,tip:"Enable sleep mode. Laptop uses 80% less."},
+  {name:"Laptop",cat:"Electronics",w:50,h:6,mo:9,tip:"Lower brightness. Unplug charger when full."},
+  {name:"LED Bulb (10W)",cat:"Lighting",w:10,h:6,mo:1.8,tip:"Use motion sensors or timers."},
+  {name:"Incandescent (60W)",cat:"Lighting",w:60,h:6,mo:10.8,tip:"Replace with LED — 85% less energy."},
+  {name:"Ceiling Fan",cat:"Cooling",w:75,h:8,mo:18,tip:"Turn off when leaving. Anti-clockwise in summer."},
+  {name:"Electric Iron",cat:"Appliances",w:1000,h:0.3,mo:9,tip:"Iron in one weekly session."},
+  {name:"Water Pump",cat:"Utilities",w:750,h:1,mo:22.5,tip:"Run during off-peak hours."},
+  {name:"EV Charger",cat:"Transport",w:7200,h:1,mo:216,tip:"Charge during off-peak night hours."},
+  {name:"Space Heater",cat:"Heating",w:1500,h:4,mo:180,tip:"Use only in occupied rooms."},
+  {name:"Gaming Console",cat:"Electronics",w:150,h:3,mo:13.5,tip:"Energy-saving mode. Turn off instead of standby."}
+];
+
+const PHANTOM=[
+  {name:"Set-Top Box",w:15,fix:"Use sleep scheduler; switch off when not in use"},
+  {name:"TV (standby)",w:5,fix:"Unplug or use smart power strip"},
+  {name:"Microwave",w:3,fix:"Turn off at socket when not cooking"},
+  {name:"Phone Charger",w:2,fix:"Unplug when phone not connected"},
+  {name:"Desktop PC",w:6,fix:"Enable shutdown on schedule"},
+  {name:"Gaming Console",w:10,fix:"Disable rest mode; fully power off"},
+  {name:"WiFi Router",w:8,fix:"Use timer to turn off at night"},
+  {name:"Printer",w:4,fix:"Enable auto power-off setting"},
+];
+
+const FACTS=["Standby mode (phantom load) can account for up to 10% of your total electricity bill.","Air conditioners are the #1 energy consumer in most Indian homes — 25–40% of your bill.","Switching from incandescent to LED bulbs cuts lighting energy use by up to 85%.","A full refrigerator is more energy-efficient than a half-empty one — it retains cold better.","Washing clothes in cold water uses 90% less energy than washing in hot water.","Unplugging phone chargers when not in use saves up to 5 kWh per year per charger.","Using a microwave instead of an oven for small meals saves about 80% energy.","Solar water heaters can reduce water heating costs by 50–80%.","Ceiling fans use 98% less energy than air conditioners.","A dripping faucet can waste 3,000+ gallons of water per year, indirectly wasting pump energy.","BEE 5-star ACs use up to 39% less electricity than 1-star models — saving ~₹4,000/year.","India's peak grid hours are 6–9 AM and 5–9 PM. Shifting loads to off-peak saves money and relieves grid stress."];
+
+const MYTHS=[
+  {myth:"Turning lights on/off wastes more electricity than leaving them on.",fact:"FALSE for modern LED and CFL bulbs. Every switch-off saves energy."},
+  {myth:"Screensavers save energy on monitors.",fact:"FALSE. Screensavers don't reduce power. Set the monitor to sleep mode."},
+  {myth:"Charging your phone overnight wastes a lot of electricity.",fact:"PARTIALLY TRUE. Modern phones stop at 100%, but long-term 100% charge degrades battery health."},
+  {myth:"Ceiling fans cool the room temperature.",fact:"FALSE. Fans cool people via wind-chill, not the room. Turn them off when you leave."},
+  {myth:"New appliances don't need energy habits.",fact:"FALSE. Even 5-star appliances waste power if used carelessly (e.g., open fridge door)."},
+  {myth:"Running AC at 16°C cools the room faster.",fact:"FALSE. AC compressors work at the same speed regardless of set temperature — you just waste energy reaching a lower target."},
+];
+
+const TIPS=[
+  {id:"T01",cat:"Behaviour",pri:"High",tip:"Turn off lights, fans, and TVs when leaving any room.",kwh:15,effort:"Zero cost"},
+  {id:"T02",cat:"Behaviour",pri:"High",tip:"Unplug chargers, microwaves, and entertainment systems when idle — eliminates phantom load.",kwh:20,effort:"Zero cost"},
+  {id:"T03",cat:"Scheduling",pri:"High",tip:"Shift washing machine, dishwasher, and EV charging to off-peak hours (10 PM–6 AM).",kwh:12,effort:"Zero cost — use appliance timers"},
+  {id:"T04",cat:"Cooling",pri:"High",tip:"Raise AC thermostat from 18°C to 24°C. Each degree increase saves ~6% cooling energy.",kwh:54,effort:"Zero cost"},
+  {id:"T05",cat:"Lighting",pri:"High",tip:"Replace all incandescent/CFL bulbs with LED equivalents — 85% less energy.",kwh:30,effort:"Low cost — pays back in under 2 months"},
+  {id:"T06",cat:"Heating",pri:"Medium",tip:"Set water heater temperature to 49°C instead of 60°C.",kwh:25,effort:"Zero cost"},
+  {id:"T07",cat:"Kitchen",pri:"Medium",tip:"Use pressure cooker and microwave instead of electric stove — 70% energy savings.",kwh:18,effort:"Zero cost if you own them"},
+  {id:"T08",cat:"Laundry",pri:"Medium",tip:"Always wash full loads using cold water settings.",kwh:10,effort:"Zero cost"},
+  {id:"T09",cat:"Electronics",pri:"Medium",tip:"Enable sleep/power-saving mode on computers, TVs, and gaming consoles.",kwh:8,effort:"Zero cost"},
+  {id:"T10",cat:"Upgrade",pri:"Medium",tip:"Upgrade to BEE 5-star rated appliances when replacing old ones — especially AC and refrigerator.",kwh:60,effort:"Medium cost — excellent long-term ROI"},
+  {id:"T11",cat:"Solar",pri:"Low",tip:"Install rooftop solar. A 3 kW system generates 360–450 kWh/month in India.",kwh:360,effort:"High upfront — ROI in 5–7 years"},
+  {id:"T12",cat:"Monitoring",pri:"Low",tip:"Install a smart energy monitor to track real-time per-circuit consumption.",kwh:20,effort:"Low cost — awareness drives 10–15% reduction"},
+  {id:"T13",cat:"Insulation",pri:"Low",tip:"Seal air leaks around doors and windows to reduce AC/heating load by 15–20%.",kwh:30,effort:"Medium cost"},
+  {id:"T14",cat:"Cooling",pri:"Medium",tip:"Run ceiling fans with AC — allows raising thermostat by 2°C without discomfort.",kwh:24,effort:"Zero cost"},
+  {id:"T15",cat:"Refrigeration",pri:"Medium",tip:"Never put hot food directly in the refrigerator — let it cool first.",kwh:5,effort:"Zero cost"},
+];
+
+const SEASONAL={
+  summer:["Set AC to 24–26°C — each degree lower increases consumption by 6%.","Use blackout curtains to block solar heat gain; reduces AC workload by 15%.","Run refrigerators away from direct sunlight and heat sources.","Pre-cool your home in the morning before peak heat of the day.","Switch to cold-water washing — clothes come out just as clean."],
+  winter:["Set space heaters to 20°C — each degree higher adds 7% to heating bills.","Seal window and door drafts to prevent heat loss — saves up to 20%.","Use thick curtains at night to retain indoor warmth.","Use heat pumps instead of resistive electric heaters — 3× more efficient.","Wear an extra layer before turning up the heater."],
+  monsoon:["Use cross-ventilation instead of power-hungry dehumidifiers.","Use natural drying racks instead of clothes dryers when possible.","Check for water ingress that can damage appliance efficiency.","Run ceiling fans instead of AC when ambient temperature is mild."],
+};
+
+const CAT_CLR={Cooling:"#00c6ff",Heating:"#ff5252",Kitchen:"#ffab40",Laundry:"#b388ff",Electronics:"#00e676",Lighting:"#ffd740",Utilities:"#90a4ae",Transport:"#1de9b6",Appliances:"#f48fb1",General:"#cfd8dc"};
+
+const CHAT_INTENTS={
+  bill:{re:/bill|cost|rupee|price|money|expensive/,agent:"Energy Education Agent",msg:"Your monthly electricity bill is calculated as:\n\n  Bill = Units (kWh) × Rate (₹/kWh) + Fixed Charges\n\nAt BESCOM rates, a typical 4-member Bangalore household:\n  • 200–500 units → ₹8.05/unit\n  • 877 units avg → ~₹6,577/month\n\nTo lower your bill:\n1. Keep consumption under 200 units (Slab 3 = ₹6.90)\n2. Shift heavy loads to off-peak (10 PM – 6 AM)\n3. Upgrade AC to 5-star BEE rated model\n\n👉 TODAY'S ACTION: Check your last bill's unit count and identify which slab you're in."},
+  save:{re:/save|reduce|cut|tip|suggest|help|lower/,agent:"Energy Saving Agent",msg:"Top 5 zero-cost energy savings you can start TODAY:\n\n1. 🌡️ Raise AC from 18°C → 24°C (saves ₹800–1,200/month)\n2. ⏰ Shift laundry/dishwasher to 10 PM–6 AM off-peak\n3. 🔌 Unplug chargers & standby devices (saves ₹150–300/month)\n4. 💡 Turn off lights & fans when leaving rooms\n5. 🧊 Don't leave fridge door open — costs ₹50–100/month\n\nWith these 5 habits alone, expect 15–20% bill reduction!\n\n👉 Visit 💡 Tips for your full personalised list."},
+  carbon:{re:/carbon|co2|emission|environment|footprint|green|tree/,agent:"Energy Education Agent",msg:"Every kWh you use emits 0.82 kg of CO₂ (India grid factor).\n\nA typical household using 877 kWh/month generates:\n  🏭 719 kg CO₂/month\n  🌳 Needs 411 trees to offset annually\n  🚗 Equivalent to driving 3,424 km\n\nSaving 200 kWh/month = preventing 164 kg CO₂:\n  → Same as planting 8 trees every month!\n\n👉 Visit 📚 Learn → Carbon tab for your personalised calculator."},
+  ac:{re:/ac|air.?con|cooling|thermostat/,agent:"Consumption Analysis Agent",msg:"Air conditioning is typically 35–45% of your electricity bill.\n\nA 1.5-ton AC running 8 hrs/day:\n  • At 18°C: ~540 kWh/month = ₹4,050\n  • At 24°C: ~360 kWh/month = ₹2,700\n  • Savings: ₹1,350/month just by raising 6°C!\n\nBest practices:\n  ✅ Set to 24°C (WHO comfort range: 23–26°C)\n  ✅ Use ceiling fan alongside (spreads cool air)\n  ✅ Clean filters monthly (5–15% efficiency loss when dirty)\n  ✅ Service annually\n  ✅ Upgrade to BEE 5-star (saves ₹4,000/year)\n\n👉 TODAY: Change your AC setting to 24°C right now."},
+  led:{re:/led|bulb|light|lamp/,agent:"Energy Education Agent",msg:"Lighting accounts for 8–15% of your electricity bill.\n\nLED vs Incandescent comparison (per bulb, 6 hrs/day):\n  • Incandescent 60W: 10.8 kWh/month = ₹81\n  • LED 10W: 1.8 kWh/month = ₹13.50\n  • Savings per bulb: ₹67.50/month\n\nWith 10 bulbs: ₹675/month saved!\nLED lifespan: 15,000+ hours vs 1,000 for incandescent.\n\n👉 TODAY: Replace your most-used lights with LEDs first."},
+  peak:{re:/peak|off.?peak|tod|time.?of.?day|schedule/,agent:"Energy Education Agent",msg:"Time-of-Day (ToD) Pricing in India:\n\n🔴 PEAK (6–9 AM, 5–9 PM): +20% surcharge\n   Avoid: AC blasting, washing machine, iron, oven\n\n🟡 NORMAL (9 AM – 5 PM): Standard rate\n   Fine for: Laptop, TV, cooking\n\n🟢 OFF-PEAK (9 PM – 6 AM): –15% discount\n   Best for: EV charging, dishwasher, laundry, water heater\n\nPotential saving by shifting loads to off-peak: ₹300–700/month\n\n👉 Use smart plugs with timers to automate this!"},
+  solar:{re:/solar|panel|rooftop|renewable/,agent:"Energy Saving Agent",msg:"Rooftop solar analysis for India:\n\n☀️ A 3 kW system in Bangalore:\n  • Generates: 360–450 kWh/month\n  • Saves: ₹2,700–3,375/month at ₹7.5/kWh\n  • System cost: ₹1.5–2 lakh (after subsidy)\n  • Payback period: 5–7 years\n  • Free electricity for: 20+ years after payback!\n\nGovt. PM Surya Ghar scheme: 40% subsidy on 3 kW systems\n\n👉 TODAY: Check your roof area (need ~25 sq.m for 3 kW)"},
+  phantom:{re:/phantom|standby|vampire|idle|background/,agent:"Consumption Analysis Agent",msg:"Phantom loads (standby power) are the 'energy vampires' in your home!\n\nTop offenders:\n  📺 Set-top box: 15W standby = 10.8 kWh/month = ₹81\n  🎮 Gaming console: 10W rest mode = 7.2 kWh/month = ₹54\n  📡 WiFi router: 8W always-on = 5.8 kWh/month = ₹43\n  📺 TV (standby): 5W = 3.6 kWh/month = ₹27\n\nTotal phantom load in typical home: 50–100 kWh/month = ₹375–750\n\nFix: Use smart power strips that cut standby power automatically.\n\n👉 Visit 📚 Learn → Phantom Load tab for full breakdown."},
+  bee:{re:/bee|star.?rating|energy.?star|rating|5.?star/,agent:"Energy Education Agent",msg:"BEE Star Rating (Bureau of Energy Efficiency, India):\n\n⭐ = 1 Star (least efficient)\n⭐⭐⭐⭐⭐ = 5 Star (most efficient)\n\nFor a 1.5-ton Split AC:\n  1-star: 1,380 kWh/year = ₹10,350\n  5-star: 840 kWh/year = ₹6,300\n  Annual saving: ₹4,050 just by upgrading!\n\nFor a 250L Refrigerator:\n  1-star → 5-star saves ₹2,025/year\n\n💡 Always check BEE label before buying any appliance.\n\n👉 Visit 💰 Tariffs & RAG → BEE Star Ratings for full table."},
+  default:{re:/./,agent:"EnergyWise Agent",msg:"Hello! I'm EnergyWise — your AI agent for electricity consumption awareness.\n\nI can help you with:\n  📊 Consumption analysis & anomaly detection\n  💰 Electricity tariff slabs & ToD pricing\n  ⭐ BEE Star ratings & ENERGY STAR benchmarks\n  💡 Personalised energy saving tips\n  🌱 Carbon footprint calculation\n  👻 Phantom load / standby waste identification\n  ☀️ Solar PV feasibility analysis\n\nWhat would you like to know? Try asking:\n  • \"How can I reduce my electricity bill?\"\n  • \"What is my carbon footprint?\"\n  • \"Explain BEE star ratings\"\n  • \"What are phantom loads?\""}
+};
+
+// ═══════════════ STATE ═══════════════
+let household={name:"Sharma Family",city:"Bangalore",occ:4,rate:7.5,appliances:[
+  {name:"Air Conditioner",w:1500,h:8,qty:1,cat:"Cooling"},
+  {name:"Refrigerator",w:150,h:24,qty:1,cat:"Kitchen"},
+  {name:"Water Heater",w:4000,h:2,qty:1,cat:"Heating"},
+  {name:"Washing Machine",w:500,h:1,qty:1,cat:"Laundry"},
+  {name:"LED TV",w:100,h:5,qty:2,cat:"Electronics"},
+  {name:"Ceiling Fan",w:75,h:10,qty:4,cat:"Cooling"},
+  {name:"LED Bulb",w:10,h:6,qty:8,cat:"Lighting"},
+  {name:"Laptop",w:50,h:6,qty:2,cat:"Electronics"},
+]};
+let chatHistory=[];
+let factIdx=0;
+
+// ═══════════════ NAV ═══════════════
+function nav(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-links button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(id==='dashboard')buildDashboard();
+  if(id==='analysis')buildAnalysis();
+  if(id==='tips')buildTips('All');
+  if(id==='calc')buildRefTable();
+  if(id==='learn'){learnTab('facts',document.querySelector('#page-learn .tab'));buildFacts();buildMyths();buildPhantom();buildPeakTable();calcCarbon();}
+  if(id==='chat')initChat();
+  if(id==='tariff'){showTariffTab('slabs',document.querySelector('#page-tariff .tab'));calcTariff();calcTod();}
+}
+
+// ═══════════════ DASHBOARD ═══════════════
+function buildDashboard(){
+  const {appliances,rate}=household;
+  const totalKwh=appliances.reduce((s,a)=>s+(a.w*a.h*a.qty/1000*30),0);
+  const bill=(totalKwh*rate).toFixed(0);
+  const co2=(totalKwh*0.82).toFixed(0);
+  const perDay=(totalKwh/30).toFixed(1);
+  const AVG=877;
+  const diff=((totalKwh-AVG)/AVG*100).toFixed(0);
+  const diffStr=diff>0?`+${diff}%`:`${diff}%`;
+  document.getElementById('dash-metrics').innerHTML=`
+    <div class="card"><h3>Monthly kWh</h3><div class="metric-val">${totalKwh.toFixed(0)}</div><div class="metric-sub metric-delta ${diff>0?'delta-up':'delta-down'}">${diffStr} vs avg</div></div>
+    <div class="card"><h3>Monthly Bill</h3><div class="metric-val" style="color:var(--yellow)">₹${bill}</div><div class="metric-sub">At ₹${rate}/kWh</div></div>
+    <div class="card"><h3>Daily Usage</h3><div class="metric-val">${perDay}</div><div class="metric-sub">kWh per day</div></div>
+    <div class="card"><h3>CO₂ Footprint</h3><div class="metric-val" style="color:var(--red)">${co2}</div><div class="metric-sub">kg/month</div></div>
+    <div class="card"><h3>Appliances</h3><div class="metric-val">${appliances.length}</div><div class="metric-sub">tracked devices</div></div>`;
+  drawHourlyChart();
+  drawDailyChart();
+  drawPeakChart(totalKwh);
+  drawCatChart();
+  buildTimeline(totalKwh);
+  buildVampire();
+  buildTargetProgress(totalKwh);
+}
+function refreshDashboard(){buildDashboard();}
+
+function drawHourlyChart(){
+  // Simulated hourly data
+  const hours=[0.3,0.2,0.2,0.2,0.3,0.8,1.4,1.6,1.3,1.0,0.9,1.0,0.8,0.7,0.7,0.8,1.2,1.8,2.1,1.9,1.5,1.2,0.8,0.5];
+  const svg=document.getElementById('hourly-chart');
+  const W=500,H=200,pad=40;
+  const max=Math.max(...hours)*1.1;
+  const bw=(W-pad*2)/24;
+  let html='';
+  // Grid lines
+  for(let i=0;i<=4;i++){
+    const y=pad+(H-pad*2)*i/4;
+    html+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="#1e3556" stroke-width="1"/>`;
+    html+=`<text x="${pad-4}" y="${y+4}" text-anchor="end" font-size="9" fill="#7bafd4">${((max-max*i/4)).toFixed(1)}</text>`;
+  }
+  hours.forEach((v,i)=>{
+    const x=pad+i*bw;
+    const bh=(v/max)*(H-pad*2);
+    const y=H-pad-bh;
+    const isPeak=(i>=6&&i<=8)||(i>=17&&i<=20);
+    const col=isPeak?'#ff5252':v>1.5?'#ffd740':'#00c6ff';
+    html+=`<rect x="${x+1}" y="${y}" width="${bw-2}" height="${bh}" fill="${col}" rx="2" opacity="0.85"/>`;
+    if(i%4===0)html+=`<text x="${x+bw/2}" y="${H-pad+14}" text-anchor="middle" font-size="9" fill="#7bafd4">${i}h</text>`;
+  });
+  html+=`<text x="${W/2}" y="${H-2}" text-anchor="middle" font-size="9" fill="#7bafd4">🔴 Red = Peak hours</text>`;
+  svg.innerHTML=html;
+}
+
+function drawDailyChart(){
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const vals=[28.5,30.1,27.3,31.8,29.4,35.2,33.7];
+  const svg=document.getElementById('daily-chart');
+  const W=500,H=200,pad=40;
+  const max=Math.max(...vals)*1.15;
+  const bw=(W-pad*2)/7;
+  let html='';
+  for(let i=0;i<=4;i++){const y=pad+(H-pad*2)*i/4;html+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="#1e3556" stroke-width="1"/><text x="${pad-4}" y="${y+4}" text-anchor="end" font-size="9" fill="#7bafd4">${(max-max*i/4).toFixed(0)}</text>`;}
+  vals.forEach((v,i)=>{
+    const x=pad+i*bw+4;
+    const bh=(v/max)*(H-pad*2);
+    const y=H-pad-bh;
+    html+=`<rect x="${x}" y="${y}" width="${bw-8}" height="${bh}" fill="${v===Math.max(...vals)?'#ff5252':'#00c6ff'}" rx="3" opacity="0.8"/>`;
+    html+=`<text x="${x+(bw-8)/2}" y="${H-pad+14}" text-anchor="middle" font-size="9" fill="#7bafd4">${days[i]}</text>`;
+    html+=`<text x="${x+(bw-8)/2}" y="${y-4}" text-anchor="middle" font-size="9" fill="#e8f4fd">${v}</text>`;
+  });
+  svg.innerHTML=html;
+}
+
+function drawPeakChart(totalKwh){
+  const peakKwh=(totalKwh*0.42).toFixed(0);
+  const offKwh=(totalKwh*0.58).toFixed(0);
+  const svg=document.getElementById('peak-chart');
+  const W=500,H=200,cx=160,cy=100,r=80;
+  const peakPct=0.42;
+  const angle=peakPct*2*Math.PI;
+  const x1=cx+r*Math.sin(0),y1=cy-r*Math.cos(0);
+  const x2=cx+r*Math.sin(angle),y2=cy-r*Math.cos(angle);
+  const lg=peakPct>0.5?1:0;
+  const path=`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${lg} 1 ${x2} ${y2} Z`;
+  const path2=`M ${cx} ${cy} L ${x2} ${y2} A ${r} ${r} 0 ${1-lg} 1 ${x1} ${y1} Z`;
+  svg.innerHTML=`
+    <path d="${path}" fill="#ff5252" opacity="0.85"/>
+    <path d="${path2}" fill="#00c6ff" opacity="0.85"/>
+    <circle cx="${cx}" cy="${cy}" r="${r*0.55}" fill="#0f1f36"/>
+    <text x="${cx}" y="${cy}" text-anchor="middle" font-size="13" font-weight="bold" fill="#e8f4fd">${(peakPct*100).toFixed(0)}%</text>
+    <text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="9" fill="#7bafd4">Peak</text>
+    <rect x="280" y="50" width="12" height="12" rx="2" fill="#ff5252"/><text x="298" y="61" font-size="11" fill="#e8f4fd">Peak Hours: ${peakKwh} kWh</text>
+    <rect x="280" y="75" width="12" height="12" rx="2" fill="#00c6ff"/><text x="298" y="86" font-size="11" fill="#e8f4fd">Off-Peak: ${offKwh} kWh</text>
+    <text x="280" y="115" font-size="11" fill="#7bafd4">Shift 20% of peak →</text>
+    <text x="280" y="130" font-size="11" fill="#00e676">Save ₹${Math.round(peakKwh*0.2*household.rate*0.2)}/month</text>`;
+}
+
+function drawCatChart(){
+  const cats={};
+  household.appliances.forEach(a=>{
+    const kwh=a.w*a.h*a.qty/1000*30;
+    cats[a.cat]=(cats[a.cat]||0)+kwh;
+  });
+  const total=Object.values(cats).reduce((s,v)=>s+v,0);
+  const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const svg=document.getElementById('cat-chart');
+  const W=500,H=200,pad={l:20,r:20,t:20,b:20};
+  const bh=Math.min(24,(H-pad.t-pad.b-entries.length*4)/entries.length);
+  const maxV=entries[0][1];
+  let html='';
+  entries.forEach(([cat,v],i)=>{
+    const y=pad.t+i*(bh+6);
+    const bw=Math.max(4,(v/maxV)*(W-pad.l-pad.r-120));
+    const pct=(v/total*100).toFixed(0);
+    html+=`<text x="${pad.l}" y="${y+bh-4}" font-size="10" fill="#7bafd4">${cat}</text>`;
+    html+=`<rect x="${pad.l+80}" y="${y}" width="${bw}" height="${bh}" fill="${CAT_CLR[cat]||'#90a4ae'}" rx="3" opacity="0.85"/>`;
+    html+=`<text x="${pad.l+80+bw+6}" y="${y+bh-4}" font-size="10" fill="#e8f4fd">${v.toFixed(0)} (${pct}%)</text>`;
+  });
+  svg.innerHTML=html;
+}
+
+function buildTimeline(totalKwh){
+  const hours=[{t:"12–2 AM",v:0.4,pk:false},{t:"2–4 AM",v:0.3,pk:false},{t:"4–6 AM",v:0.5,pk:false},{t:"6–9 AM",v:2.8,pk:true},{t:"9–12 PM",v:1.9,pk:false},{t:"12–3 PM",v:1.6,pk:false},{t:"3–5 PM",v:1.4,pk:false},{t:"5–9 PM",v:3.6,pk:true},{t:"9–12 AM",v:1.8,pk:false}];
+  const max=Math.max(...hours.map(h=>h.v));
+  document.getElementById('hourly-timeline').innerHTML=hours.map(h=>`
+    <div class="timeline-row">
+      <div class="timeline-time">${h.t}</div>
+      <div class="timeline-bar-wrap"><div class="timeline-bar" style="width:${(h.v/max*100).toFixed(0)}%;background:${h.pk?'#ff5252':'#00c6ff'}">${h.pk?'PEAK':''}</div></div>
+      <div class="timeline-val">${h.v} kWh</div>
+    </div>`).join('');
+}
+
+function buildVampire(){
+  const rate=household.rate;
+  document.getElementById('vampire-section').innerHTML=`
+    <div class="alert alert-yellow" style="margin-bottom:12px">👻 Estimated standby waste: <strong>${PHANTOM.reduce((s,p)=>s+(p.w*24*30/1000),0).toFixed(1)} kWh/month</strong> = <strong>₹${(PHANTOM.reduce((s,p)=>s+(p.w*24*30/1000),0)*rate).toFixed(0)}/month</strong></div>`+
+    PHANTOM.slice(0,5).map(p=>{
+      const kwh=(p.w*24*30/1000).toFixed(1);
+      const cost=(kwh*rate).toFixed(0);
+      const pct=(p.w/20*100).toFixed(0);
+      return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span><span style="color:var(--yellow)">👻</span> ${p.name} — ${p.w}W standby</span><span style="color:var(--red)">₹${cost}/mo</span></div><div class="bar-wrap"><div class="bar" style="width:${Math.min(100,pct)}%;background:var(--yellow)"></div></div></div>`;
+    }).join('');
+}
+
+function buildTargetProgress(totalKwh){
+  const targets=[
+    {label:"10% Reduction",target:totalKwh*0.9,current:totalKwh,achieved:false},
+    {label:"20% Reduction",target:totalKwh*0.8,current:totalKwh,achieved:false},
+    {label:"Below National Avg (877 kWh)",target:877,current:totalKwh,achieved:totalKwh<=877},
+  ];
+  document.getElementById('target-progress').innerHTML=targets.map(t=>{
+    const pct=Math.min(100,(t.target/t.current*100)).toFixed(0);
+    return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>${t.label} <span style="color:var(--muted)">(target: ${t.target.toFixed(0)} kWh)</span></span><span style="${t.achieved?'color:var(--green)':'color:var(--yellow)'}">${t.achieved?'✅ Achieved':'In Progress'}</span></div><div class="bar-wrap" style="height:12px"><div class="bar" style="width:${pct}%;background:${t.achieved?'var(--green)':'var(--accent)'}"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">Currently at ${totalKwh.toFixed(0)} kWh — need to reduce by ${Math.max(0,totalKwh-t.target).toFixed(0)} kWh more</div></div>`;
+  }).join('');
+}
+
+// ═══════════════ PROFILE ═══════════════
+function renderApplianceTable(){
+  const {appliances,rate}=household;
+  if(!appliances.length){document.getElementById('appliance-list').innerHTML='<div style="color:var(--muted);font-size:13px">No appliances added yet.</div>';return;}
+  let html='<div style="overflow-x:auto"><table><thead><tr><th>Appliance</th><th>Category</th><th>Wattage</th><th>Daily Hrs</th><th>Qty</th><th>Monthly kWh</th><th>Monthly Cost</th><th></th></tr></thead><tbody>';
+  appliances.forEach((a,i)=>{
+    const kwh=(a.w*a.h*a.qty/1000*30).toFixed(1);
+    html+=`<tr><td>${a.name}</td><td><span class="dot" style="background:${CAT_CLR[a.cat]||'#90a4ae'}"></span>${a.cat}</td><td>${a.w}W</td><td>${a.h}h</td><td>${a.qty}</td><td>${kwh}</td><td>₹${(kwh*rate).toFixed(0)}</td><td><button class="btn btn-outline btn-sm" onclick="removeAppliance(${i})" style="padding:3px 10px">✕</button></td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('appliance-list').innerHTML=html;
+}
+function addAppliance(){
+  const name=document.getElementById('new-name').value.trim();
+  const w=parseFloat(document.getElementById('new-watt').value);
+  const h=parseFloat(document.getElementById('new-hrs').value);
+  const qty=parseInt(document.getElementById('new-qty').value)||1;
+  const cat=document.getElementById('new-cat').value;
+  if(!name||!w||!h){alert('Enter appliance name, wattage and hours.');return;}
+  household.appliances.push({name,w,h,qty,cat});
+  renderApplianceTable();
+  document.getElementById('new-name').value='';
+}
+function removeAppliance(i){household.appliances.splice(i,1);renderApplianceTable();}
+function saveProfile(){
+  household.name=document.getElementById('prof-name').value||'My Home';
+  household.city=document.getElementById('prof-city').value||'India';
+  household.occ=parseInt(document.getElementById('prof-occ').value)||4;
+  household.rate=parseFloat(document.getElementById('prof-rate').value)||7.5;
+  const totalKwh=household.appliances.reduce((s,a)=>s+(a.w*a.h*a.qty/1000*30),0).toFixed(1);
+  const bill=(totalKwh*household.rate).toFixed(0);
+  document.getElementById('profile-msg').textContent=`✅ Profile saved! ${household.appliances.length} appliances · ${totalKwh} kWh/month · ₹${bill}/month estimated bill`;
+  document.getElementById('profile-metrics').innerHTML=`
+    <div class="card"><h3>Monthly kWh</h3><div class="metric-val">${totalKwh}</div></div>
+    <div class="card"><h3>Monthly Bill</h3><div class="metric-val" style="color:var(--yellow)">₹${bill}</div></div>
+    <div class="card"><h3>CO₂/month</h3><div class="metric-val" style="color:var(--red)">${(totalKwh*0.82).toFixed(0)} kg</div></div>
+    <div class="card"><h3>Appliances</h3><div class="metric-val">${household.appliances.length}</div></div>`;
+  document.getElementById('profile-result').style.display='block';
+}
+
+// ═══════════════ ANALYSIS ═══════════════
+function buildAnalysis(){
+  const {appliances,rate,occ}=household;
+  if(!appliances.length){document.getElementById('no-profile-msg').style.display='block';document.getElementById('analysis-body').style.display='none';return;}
+  document.getElementById('no-profile-msg').style.display='none';
+  document.getElementById('analysis-body').style.display='block';
+  const totalKwh=appliances.reduce((s,a)=>s+(a.w*a.h*a.qty/1000*30),0);
+  const bill=(totalKwh*rate).toFixed(0);
+  const co2=(totalKwh*0.82).toFixed(0);
+  const AVG=877;
+  const diffPct=((totalKwh-AVG)/AVG*100).toFixed(0);
+  let rating,rc;
+  if(diffPct<=-20){rating='Excellent ★';rc='var(--green)'}
+  else if(diffPct<=0){rating='Good ✓';rc='#4ade80'}
+  else if(diffPct<=25){rating='Average';rc='var(--yellow)'}
+  else if(diffPct<=60){rating='High ⚠';rc='var(--orange)'}
+  else{rating='Very High 🚨';rc='var(--red)'}
+  document.getElementById('analysis-metrics').innerHTML=`
+    <div class="card"><h3>Monthly kWh</h3><div class="metric-val">${totalKwh.toFixed(0)}</div><div class="metric-sub">National avg: ${AVG}</div></div>
+    <div class="card"><h3>Monthly Bill</h3><div class="metric-val" style="color:var(--yellow)">₹${bill}</div><div class="metric-sub">At ₹${rate}/kWh</div></div>
+    <div class="card"><h3>CO₂ Footprint</h3><div class="metric-val" style="color:var(--red)">${co2} kg</div><div class="metric-sub">0.82 kg/kWh</div></div>
+    <div class="card"><h3>Rating</h3><div class="metric-val" style="color:${rc}">${rating}</div><div class="metric-sub">${diffPct>0?'+':''}${diffPct}% vs average</div></div>`;
+  // Top consumers
+  const sorted=[...appliances].map(a=>({...a,kwh:a.w*a.h*a.qty/1000*30})).sort((a,b)=>b.kwh-a.kwh).slice(0,6);
+  document.getElementById('top-consumers').innerHTML=sorted.map(a=>{
+    const pct=(a.kwh/totalKwh*100).toFixed(1);
+    return `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span><span class="dot" style="background:${CAT_CLR[a.cat]||'#90a4ae'}"></span>${a.name}</span><span style="color:var(--muted)">${a.kwh.toFixed(1)} kWh (${pct}%)</span></div><div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${CAT_CLR[a.cat]||'#90a4ae'}"></div></div></div>`;
+  }).join('');
+  // Category
+  const cats={};
+  appliances.forEach(a=>{const k=a.w*a.h*a.qty/1000*30;cats[a.cat]=(cats[a.cat]||0)+k;});
+  document.getElementById('cat-breakdown').innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([c,v])=>{
+    const pct=(v/totalKwh*100).toFixed(1);
+    return `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span><span class="dot" style="background:${CAT_CLR[c]||'#90a4ae'}"></span>${c}</span><span style="color:var(--muted)">${v.toFixed(1)} kWh (${pct}%)</span></div><div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${CAT_CLR[c]||'#90a4ae'}"></div></div></div>`;
+  }).join('');
+  // Alerts
+  let alertHtml='';
+  appliances.forEach(a=>{
+    const ref=DB.find(r=>r.name.toLowerCase().split(' ')[0]===a.name.toLowerCase().split(' ')[0]);
+    if(ref){const myKwh=a.w*a.h*a.qty/1000*30;if(myKwh>=ref.mo*2){alertHtml+=`<div class="alert alert-red"><strong>🔴 CRITICAL: ${a.name}</strong> — Using ${(myKwh-ref.mo).toFixed(1)} kWh/month extra → ₹${((myKwh-ref.mo)*rate).toFixed(0)} wasted<br/><small>💡 ${ref.tip}</small></div>`;} else if(myKwh>=ref.mo*1.3){alertHtml+=`<div class="alert alert-yellow"><strong>🟡 HIGH: ${a.name}</strong> — Using ${(myKwh-ref.mo).toFixed(1)} kWh/month extra → ₹${((myKwh-ref.mo)*rate).toFixed(0)} wasted<br/><small>💡 ${ref.tip}</small></div>`;}}
+  });
+  document.getElementById('alerts-section').innerHTML=alertHtml||'<div class="alert alert-green">✅ No anomalies detected. Your appliance usage looks within normal range!</div>';
+  // Savings
+  const s1=(totalKwh*0.1).toFixed(1),s2=(totalKwh*0.2).toFixed(1),s3=(totalKwh*0.35).toFixed(1);
+  document.getElementById('savings-cards').innerHTML=`
+    <div class="card"><h3>Conservative (10%)</h3><div class="metric-val" style="color:var(--green)">${s1} kWh</div><div class="metric-sub">₹${(s1*rate).toFixed(0)}/month<br/>Zero-cost habit changes</div></div>
+    <div class="card"><h3>Moderate (20%)</h3><div class="metric-val" style="color:var(--yellow)">${s2} kWh</div><div class="metric-sub">₹${(s2*rate).toFixed(0)}/month<br/>Scheduling + habit changes</div></div>
+    <div class="card"><h3>Aggressive (35%)</h3><div class="metric-val" style="color:var(--red)">${s3} kWh</div><div class="metric-sub">₹${(s3*rate).toFixed(0)}/month<br/>Upgrades + solar investment</div></div>`;
+  // Register
+  document.getElementById('reg-tbody').innerHTML=appliances.map(a=>{
+    const kwh=(a.w*a.h*a.qty/1000*30).toFixed(1);
+    const share=(kwh/totalKwh*100).toFixed(1);
+    return `<tr><td>${a.name}</td><td><span class="dot" style="background:${CAT_CLR[a.cat]||'#90a4ae'}"></span>${a.cat}</td><td>${a.w}W</td><td>${a.h}h</td><td>${a.qty}</td><td>${kwh}</td><td>₹${(kwh*rate).toFixed(0)}</td><td><div class="bar-wrap" style="min-width:60px"><div class="bar" style="width:${share}%;background:${CAT_CLR[a.cat]||'#90a4ae'}"></div></div>${share}%</td></tr>`;
+  }).join('');
+}
+
+// ═══════════════ TARIFF ═══════════════
+function showTariffTab(id,btn){
+  ['slabs','tod','bee','energy-star'].forEach(t=>document.getElementById('tariff-'+t).style.display='none');
+  document.getElementById('tariff-'+id).style.display='block';
+  document.querySelectorAll('#page-tariff .tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+}
+function calcTariff(){
+  const u=parseFloat(document.getElementById('tariff-units').value)||0;
+  let cost=0,breakdown='';
+  if(u<=30){cost=0;breakdown='Slab 1: ₹0 (free)'}
+  else if(u<=100){cost=(u-30)*4.9;breakdown=`Slab 1 (0–30): ₹0<br/>Slab 2 (31–100): ${u-30} units × ₹4.90 = ₹${((u-30)*4.9).toFixed(0)}`}
+  else if(u<=200){cost=70*4.9+(u-100)*6.9;breakdown=`Slab 2: 70×₹4.90=₹343<br/>Slab 3: ${u-100} units × ₹6.90 = ₹${((u-100)*6.9).toFixed(0)}`}
+  else if(u<=500){cost=70*4.9+100*6.9+(u-200)*8.05;breakdown=`Slab 2: ₹343<br/>Slab 3: ₹690<br/>Slab 4: ${u-200} units × ₹8.05 = ₹${((u-200)*8.05).toFixed(0)}`}
+  else{cost=70*4.9+100*6.9+300*8.05+(u-500)*9;breakdown=`Slabs 2–4: ₹${(70*4.9+100*6.9+300*8.05).toFixed(0)}<br/>Slab 5: ${u-500} units × ₹9.00 = ₹${((u-500)*9).toFixed(0)}`}
+  document.getElementById('tariff-result').innerHTML=`<div class="grid2"><div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">BREAKDOWN</div><div style="font-size:13px;line-height:2;color:var(--text)">${breakdown}</div></div><div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">TOTAL BILL</div><div style="font-size:32px;font-weight:800;color:var(--yellow)">₹${(cost+100).toFixed(0)}</div><div style="font-size:12px;color:var(--muted)">+₹100 fixed charges</div></div></div>`;
+}
+function calcTod(){
+  const peak=parseFloat(document.getElementById('tod-peak').value)||0;
+  const normal=parseFloat(document.getElementById('tod-normal').value)||0;
+  const offpeak=parseFloat(document.getElementById('tod-offpeak').value)||0;
+  const r=household.rate;
+  const peakCost=peak*r*1.2;
+  const normalCost=normal*r;
+  const offCost=offpeak*r*0.85;
+  const total=peakCost+normalCost+offCost;
+  const noTod=(peak+normal+offpeak)*r;
+  const saving=noTod-total;
+  document.getElementById('tod-result').innerHTML=`<div class="grid4"><div class="card"><h3>Peak Cost</h3><div class="metric-val" style="color:var(--red)">₹${peakCost.toFixed(0)}</div><div class="metric-sub">+20% surcharge</div></div><div class="card"><h3>Normal Cost</h3><div class="metric-val">₹${normalCost.toFixed(0)}</div><div class="metric-sub">Standard rate</div></div><div class="card"><h3>Off-Peak Cost</h3><div class="metric-val" style="color:var(--green)">₹${offCost.toFixed(0)}</div><div class="metric-sub">–15% discount</div></div><div class="card"><h3>Total Bill</h3><div class="metric-val" style="color:var(--yellow)">₹${total.toFixed(0)}</div><div class="metric-sub ${saving>0?'delta-down':'delta-up'}">${saving>0?'Save':'Extra'} ₹${Math.abs(saving).toFixed(0)}</div></div></div>`;
+}
+
+// ═══════════════ TIPS ═══════════════
+function buildTips(filter){
+  const rate=household.rate;
+  let list=TIPS;
+  if(filter==='High')list=TIPS.filter(t=>t.pri==='High');
+  else if(filter==='Medium')list=TIPS.filter(t=>t.pri==='Medium');
+  else if(filter==='Low')list=TIPS.filter(t=>t.pri==='Low');
+  else if(filter==='zero')list=TIPS.filter(t=>t.effort.startsWith('Zero'));
+  else if(['Cooling','Heating','Lighting','Kitchen'].includes(filter))list=TIPS.filter(t=>t.cat===filter);
+  document.getElementById('tips-list').innerHTML=list.map((t,i)=>{
+    const pcl={'High':'badge-red','Medium':'badge-yellow','Low':'badge-green'}[t.pri];
+    const saving=(t.kwh*rate).toFixed(0);
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px"><div style="font-weight:700;margin-bottom:8px;font-size:14px">${i+1}. ${t.tip}</div><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="badge ${pcl}">${t.pri} Priority</span><span class="badge badge-blue">${t.cat}</span><span class="badge badge-green">~₹${saving}/month saved</span><span style="font-size:12px;color:var(--muted);align-self:center">Effort: ${t.effort}</span></div></div>`;
+  }).join('')||'<div style="color:var(--muted)">No tips match this filter.</div>';
+}
+function filterTips(f){buildTips(f);}
+
+// ═══════════════ LEARN ═══════════════
+function learnTab(id,btn){
+  ['facts','myths','peak','seasonal','carbon','phantom'].forEach(t=>{const el=document.getElementById('learn-'+t);if(el)el.style.display='none';});
+  const el=document.getElementById('learn-'+id);if(el)el.style.display='block';
+  document.querySelectorAll('#page-learn .tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+}
+function buildFacts(){document.getElementById('facts-content').innerHTML=FACTS.map(f=>`<div style="background:linear-gradient(135deg,#0a1628,#0f2744);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:10px;font-size:14px">💡 ${f}</div>`).join('');}
+function buildMyths(){document.getElementById('myths-content').innerHTML=MYTHS.map(m=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:var(--red);letter-spacing:1px;margin-bottom:6px">❌ MYTH</div><div style="margin-bottom:12px;font-weight:600">${m.myth}</div><div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:6px">✅ FACT</div><div style="color:var(--green)">${m.fact}</div></div>`).join('');}
+function buildPhantom(){const r=household.rate;document.getElementById('phantom-tbody').innerHTML=PHANTOM.map(p=>{const kwh=(p.w*24*30/1000).toFixed(1);const cost=(kwh*r).toFixed(0);return `<tr><td>👻 ${p.name}</td><td>${p.w}W</td><td>${kwh}</td><td style="color:var(--red)">₹${cost}</td><td style="color:var(--muted);font-size:12px">${p.fix}</td></tr>`;}).join('');}
+function buildPeakTable(){const r=household.rate;const apps=[{name:"Washing Machine",w:500,h:1,peak:true},{name:"Dishwasher",w:1800,h:0.5,peak:true},{name:"EV Charger",w:7200,h:1,peak:true},{name:"Iron",w:1000,h:0.3,peak:true}];document.getElementById('peak-savings-table').innerHTML='<div style="font-size:13px;color:var(--muted);margin-bottom:10px">Monthly savings by shifting these to off-peak:</div>'+apps.map(a=>{const kwh=(a.w*a.h/1000*30).toFixed(1);const saving=(kwh*r*0.35).toFixed(0);return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${a.name}</span><span style="color:var(--green)">Save ₹${saving}/mo</span></div>`;}).join('');}
+function showSeason(s){document.getElementById('seasonal-content').innerHTML=SEASONAL[s].map((t,i)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px"><strong>${i+1}.</strong> ${t}</div>`).join('');}
+function calcCarbon(){const kwh=parseFloat(document.getElementById('carbon-kwh').value)||877;const co2=(kwh*0.82).toFixed(1);const trees=Math.ceil(co2/1.75);const km=Math.round(co2/0.21);const phones=Math.round(kwh/0.012);document.getElementById('carbon-result').innerHTML=`<div class="grid4"><div class="card"><h3>CO₂ Generated</h3><div class="metric-val" style="color:var(--red)">${co2} kg</div><div class="metric-sub">per month</div></div><div class="card"><h3>Trees to Offset</h3><div class="metric-val" style="color:var(--green)">${trees}</div><div class="metric-sub">trees/month needed</div></div><div class="card"><h3>Car Equivalent</h3><div class="metric-val" style="color:var(--yellow)">${km} km</div><div class="metric-sub">driven by petrol car</div></div><div class="card"><h3>Smartphone Charges</h3><div class="metric-val">${phones.toLocaleString()}</div><div class="metric-sub">equivalent charges</div></div></div><div class="alert alert-blue" style="margin-top:12px">Saving 100 kWh/month prevents <strong>82 kg of CO₂</strong> — same as planting 4 trees or not driving 390 km.</div>`;}
+
+// ═══════════════ CALCULATOR ═══════════════
+function runCalc(){
+  const name=document.getElementById('calc-name').value||'Appliance';
+  const w=parseFloat(document.getElementById('calc-watt').value)||0;
+  const h=parseFloat(document.getElementById('calc-hrs').value)||0;
+  const qty=parseInt(document.getElementById('calc-qty').value)||1;
+  const r=parseFloat(document.getElementById('calc-rate').value)||7.5;
+  const d=parseInt(document.getElementById('calc-days').value)||30;
+  const daily=(w*h*qty/1000).toFixed(3);
+  const monthly=(daily*d).toFixed(1);
+  const annual=(daily*365).toFixed(0);
+  const mCost=(monthly*r).toFixed(0);
+  const aCost=(annual*r).toFixed(0);
+  const co2=(monthly*0.82).toFixed(1);
+  document.getElementById('calc-metrics').innerHTML=`
+    <div class="card"><h3>Daily kWh</h3><div class="metric-val">${daily}</div></div>
+    <div class="card"><h3>Monthly kWh</h3><div class="metric-val">${monthly}</div></div>
+    <div class="card"><h3>Monthly Cost</h3><div class="metric-val" style="color:var(--yellow)">₹${mCost}</div></div>
+    <div class="card"><h3>Annual Cost</h3><div class="metric-val" style="color:var(--red)">₹${aCost}</div></div>`;
+  document.getElementById('calc-analogies').innerHTML=`<div class="alert alert-blue">🌱 Generates <strong>${co2} kg CO₂/month</strong> &nbsp;|&nbsp; 📱 Equivalent to <strong>${Math.round(monthly/0.012).toLocaleString()} smartphone charges</strong> &nbsp;|&nbsp; 💡 Powers a 10W LED for <strong>${Math.round(monthly/0.01).toLocaleString()} hours</strong></div>`;
+  const comparisons=[{name:name,cost:parseFloat(mCost)},{name:"LED TV (100W,5h)",cost:(100*5/1000*d*r).toFixed(0)},{name:"Ceiling Fan (75W,10h)",cost:(75*10/1000*d*r).toFixed(0)},{name:"Laptop (50W,6h)",cost:(50*6/1000*d*r).toFixed(0)}];
+  const maxC=Math.max(...comparisons.map(c=>parseFloat(c.cost)));
+  const W=500,H=180,pad=40,bw=80;
+  let svg='';
+  comparisons.forEach((c,i)=>{
+    const bh=Math.max(4,(c.cost/maxC)*(H-pad*2));
+    const x=pad+i*(bw+20);
+    const y=H-pad-bh;
+    svg+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="${i===0?'#ffd740':'#00c6ff'}" rx="4" opacity="0.8"/>`;
+    svg+=`<text x="${x+bw/2}" y="${H-pad+14}" text-anchor="middle" font-size="9" fill="#7bafd4">${c.name.split('(')[0].trim()}</text>`;
+    svg+=`<text x="${x+bw/2}" y="${y-5}" text-anchor="middle" font-size="10" font-weight="bold" fill="#e8f4fd">₹${c.cost}</text>`;
+  });
+  document.getElementById('calc-chart').innerHTML=svg;
+  document.getElementById('calc-result').style.display='block';
+}
+function buildRefTable(){const r=household.rate;document.getElementById('ref-tbody').innerHTML=DB.map(a=>`<tr><td>${a.name}</td><td><span class="dot" style="background:${CAT_CLR[a.cat]||'#90a4ae'}"></span>${a.cat}</td><td>${a.w}W</td><td>${a.h}h</td><td>${a.mo}</td><td style="color:var(--yellow)">₹${(a.mo*r).toFixed(0)}</td><td style="color:var(--red)">${(a.mo*0.82).toFixed(1)}</td></tr>`).join('');}
+
+// ═══════════════ CHAT ═══════════════
+function initChat(){
+  if(!chatHistory.length){
+    addBotMsg("EnergyWise Agent","Hello! I'm EnergyWise ⚡ — your multi-agent AI platform for electricity consumption awareness.\n\nI'm powered by IBM Granite (watsonx.ai) and can help you:\n  📊 Analyse your energy usage patterns\n  💰 Understand tariff slabs & ToD pricing\n  ⭐ Explain BEE Star / ENERGY STAR ratings\n  💡 Personalised saving recommendations\n  🌱 Calculate your carbon footprint\n  👻 Identify phantom load waste\n  ☀️ Solar PV feasibility\n\nWhat would you like to know?");
+    const suggs=["How do I reduce my electricity bill?","Explain BEE star ratings","What are peak hours?","What is phantom load?","Tell me about my AC consumption","How do I calculate my carbon footprint?","Should I install solar panels?"];
+    document.getElementById('sugg-row').innerHTML=suggs.map(s=>`<button class="btn btn-outline btn-sm" onclick="quickSend('${s}')">${s}</button>`).join('');
+  }
+}
+function addBotMsg(agent,text){
+  const box=document.getElementById('chat-box');
+  const d=document.createElement('div');d.className='msg msg-bot';
+  d.innerHTML=`<div class="agent-tag">${agent}</div>${text.replace(/\n/g,'<br/>')}`;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+  chatHistory.push({role:'bot',agent,text});
+}
+function addUserMsg(text){
+  const box=document.getElementById('chat-box');
+  const d=document.createElement('div');d.className='msg msg-user';d.textContent=text;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+  chatHistory.push({role:'user',text});
+}
+function getResponse(q){
+  const ql=q.toLowerCase();
+  for(const[key,intent] of Object.entries(CHAT_INTENTS)){
+    if(key!=='default'&&intent.re.test(ql))return {agent:intent.agent,msg:intent.msg};
+  }
+  return {agent:CHAT_INTENTS.default.agent,msg:CHAT_INTENTS.default.msg};
+}
+function sendChat(){
+  const inp=document.getElementById('chat-input');
+  const text=inp.value.trim();if(!text)return;
+  inp.value='';addUserMsg(text);
+  setTimeout(()=>{const r=getResponse(text);addBotMsg(r.agent,r.msg);},500);
+}
+function quickSend(text){document.getElementById('chat-input').value=text;sendChat();}
+function clearChat(){chatHistory=[];document.getElementById('chat-box').innerHTML='';initChat();}
+
+// ═══════════════ INIT ═══════════════
+renderApplianceTable();
+buildRefTable();
+buildDashboard();
+// Start on home, pre-populate analysis silently
+setTimeout(()=>{
+  document.getElementById('tariff-slabs').style.display='block';
+  calcTariff();calcTod();
+},100);
+</script>
+</body>
+</html>

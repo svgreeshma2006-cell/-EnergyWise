@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>EnergyWise AI — Electricity Consumption Awareness</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#020912;--s1:#061525;--s2:#0a1e35;
+  --accent:#00d4ff;--green:#00ff88;--yellow:#ffd700;
+  --red:#ff4444;--purple:#9d4edd;--orange:#ff8c00;
+  --text:#e8f8ff;--muted:#5a8aaa;
+}
+/* ── LIGHT THEME ── */
+body.light{
+  --bg:#f0f6ff;--s1:#e2edf8;--s2:#d0e2f5;
+  --accent:#006eb5;--green:#007a3d;--yellow:#b35f00;
+  --red:#c0000a;--purple:#6b00cc;--orange:#b35f00;
+  --text:#0a1a2e;--muted:#3a6080;
+}
+body.light nav{background:rgba(240,246,255,0.92);border-bottom:1px solid rgba(0,110,181,0.15)}
+body.light .stats-strip{background:rgba(220,235,250,0.8);border-color:rgba(0,110,181,0.15)}
+body.light .challenge-card{background:rgba(220,235,250,0.6);border-color:rgba(0,110,181,0.12)}
+body.light .challenge-card:hover{background:rgba(200,225,248,0.9)}
+body.light .agent-card{background:rgba(220,235,250,0.6)}
+body.light .feat-visual{background:rgba(210,230,248,0.7);border-color:rgba(0,110,181,0.15)}
+body.light .mock-screen{background:#daeaf8}
+body.light .cta-box{background:linear-gradient(135deg,rgba(0,110,181,0.06),rgba(0,122,61,0.04));border-color:rgba(0,110,181,0.2)}
+body.light footer{border-top-color:rgba(0,110,181,0.12);color:var(--muted)}
+body.light .hero-tag{background:rgba(0,110,181,0.08);border-color:rgba(0,110,181,0.25)}
+body.light .problem-section{background:linear-gradient(180deg,var(--bg),#e4f0fb,var(--bg))}
+body.light .features-section{background:linear-gradient(180deg,var(--bg),#e4f0fb,var(--bg))}
+
+/* ── THEME TOGGLE BUTTON ── */
+#theme-btn{
+  width:40px;height:22px;border-radius:99px;border:none;cursor:pointer;
+  background:#1e3a5f;position:relative;transition:background .3s;flex-shrink:0;
+  margin-left:12px;
+}
+#theme-btn::after{
+  content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;
+  border-radius:50%;background:#fff;transition:transform .3s,background .3s;
+}
+body.light #theme-btn{background:var(--accent)}
+body.light #theme-btn::after{transform:translateX(18px);background:#fff}
+.theme-label{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap;letter-spacing:.3px;transition:color .3s}
+
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .4s,color .4s}
+
+/* ── CANVAS BACKGROUND ── */
+#canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 40px;height:64px;display:flex;align-items:center;background:rgba(2,9,18,0.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,212,255,0.1)}
+.brand{font-size:22px;font-weight:900;letter-spacing:-1px;color:var(--accent);text-shadow:0 0 30px rgba(0,212,255,0.6);flex:1}
+.brand span{color:var(--yellow)}
+.nav-links{display:flex;gap:4px}
+.nav-links a{color:var(--muted);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none}
+.nav-links a:hover{color:var(--text);background:rgba(0,212,255,0.08)}
+.nav-links .nav-cta{background:var(--accent);color:#020912;padding:8px 18px;border-radius:8px}
+.nav-links .nav-cta:hover{background:#33dfff;transform:translateY(-1px)}
+.nav-pulse{width:8px;height:8px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite;margin-left:16px}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,255,136,0.6)}50%{opacity:.6;box-shadow:0 0 0 6px rgba(0,255,136,0)}}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;z-index:10;padding:100px 24px 60px}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.25);border-radius:99px;padding:6px 18px;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1px;margin-bottom:28px;animation:fadeDown .8s ease}
+.hero-tag .dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+
+.hero h1{font-size:clamp(36px,6vw,80px);font-weight:900;line-height:1.05;letter-spacing:-2px;margin-bottom:24px;animation:fadeUp .9s ease .1s both}
+.hero h1 .line1{display:block;color:var(--text)}
+.hero h1 .line2{display:block;background:linear-gradient(90deg,var(--accent),var(--green),var(--accent));background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shine 3s linear infinite}
+@keyframes shine{to{background-position:200% center}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+.hero-sub{font-size:clamp(14px,2vw,18px);color:var(--muted);max-width:640px;line-height:1.8;margin-bottom:40px;animation:fadeUp .9s ease .2s both}
+.hero-sub b{color:var(--text)}
+
+.hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:56px;animation:fadeUp .9s ease .3s both}
+.btn-glow{padding:14px 32px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;border:none;transition:all .25s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#0099cc);color:#020912;box-shadow:0 0 30px rgba(0,212,255,0.3)}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 0 50px rgba(0,212,255,0.5)}
+.btn-ghost{background:transparent;border:1px solid rgba(0,212,255,0.3);color:var(--accent)}
+.btn-ghost:hover{background:rgba(0,212,255,0.08);border-color:var(--accent);transform:translateY(-2px)}
+
+/* ── TYPING ── */
+#typing-wrap{font-size:clamp(13px,1.5vw,16px);color:var(--muted);margin-bottom:56px;animation:fadeUp .9s ease .35s both;min-height:28px}
+#typing-wrap .prompt{color:var(--accent);font-weight:700;margin-right:6px}
+#typed{color:var(--text)}
+.cursor{display:inline-block;width:2px;height:1em;background:var(--accent);margin-left:2px;animation:cursor .7s step-end infinite;vertical-align:text-bottom}
+@keyframes cursor{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── STATS STRIP ── */
+.stats-strip{display:flex;justify-content:center;gap:0;flex-wrap:wrap;width:100%;max-width:900px;background:rgba(10,30,53,0.6);border:1px solid rgba(0,212,255,0.12);border-radius:16px;backdrop-filter:blur(12px);overflow:hidden;animation:fadeUp .9s ease .4s both}
+.stat-item{flex:1;min-width:150px;padding:24px 20px;text-align:center;border-right:1px solid rgba(0,212,255,0.1);position:relative}
+.stat-item:last-child{border-right:none}
+.stat-num{font-size:clamp(24px,4vw,40px);font-weight:900;letter-spacing:-1px;line-height:1}
+.stat-label{font-size:11px;color:var(--muted);margin-top:6px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.stat-icon{font-size:20px;margin-bottom:6px}
+
+/* ── SCROLL INDICATOR ── */
+.scroll-hint{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase;animation:float 2s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+.scroll-arrow{width:20px;height:20px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(45deg)}
+
+/* ── SECTIONS ── */
+section{position:relative;z-index:10;padding:100px 24px}
+.section-label{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.section-title{font-size:clamp(28px,4vw,48px);font-weight:900;letter-spacing:-1px;margin-bottom:16px;line-height:1.1}
+.section-sub{font-size:15px;color:var(--muted);max-width:560px;line-height:1.8}
+
+/* ── PROBLEM SECTION ── */
+.problem-section{background:linear-gradient(180deg,var(--bg) 0%,#040e1f 50%,var(--bg) 100%);text-align:center}
+.problem-section .section-sub{margin:0 auto 48px}
+.challenge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:1100px;margin:0 auto}
+.challenge-card{background:rgba(10,30,53,0.5);border:1px solid rgba(0,212,255,0.08);border-radius:14px;padding:28px;text-align:left;transition:all .3s;position:relative;overflow:hidden}
+.challenge-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);transform:scaleX(0);transition:transform .4s}
+.challenge-card:hover{border-color:rgba(0,212,255,0.25);transform:translateY(-4px);background:rgba(10,30,53,0.8)}
+.challenge-card:hover::before{transform:scaleX(1)}
+.ch-icon{font-size:32px;margin-bottom:14px}
+.ch-title{font-size:15px;font-weight:700;margin-bottom:8px}
+.ch-desc{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── AGENTS SECTION ── */
+.agents-section{text-align:center}
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;max-width:1100px;margin:48px auto 0}
+.agent-card{background:rgba(10,30,53,0.5);border-radius:16px;padding:32px 24px;text-align:center;transition:all .35s;cursor:default;position:relative;overflow:hidden}
+.agent-card::after{content:'';position:absolute;inset:0;border-radius:16px;opacity:0;transition:opacity .3s}
+.agent-card:hover{transform:translateY(-6px)}
+.agent-card.blue{border:1px solid rgba(0,212,255,0.2)}.agent-card.blue::after{background:rgba(0,212,255,0.03)}.agent-card.blue:hover{box-shadow:0 0 40px rgba(0,212,255,0.12)}.agent-card.blue::after{opacity:1}
+.agent-card.green{border:1px solid rgba(0,255,136,0.2)}.agent-card.green:hover{box-shadow:0 0 40px rgba(0,255,136,0.12)}
+.agent-card.yellow{border:1px solid rgba(255,215,0,0.2)}.agent-card.yellow:hover{box-shadow:0 0 40px rgba(255,215,0,0.12)}
+.agent-card.purple{border:1px solid rgba(157,78,221,0.2)}.agent-card.purple:hover{box-shadow:0 0 40px rgba(157,78,221,0.12)}
+.agent-emoji{font-size:48px;margin-bottom:16px;display:block}
+.agent-name{font-size:16px;font-weight:800;margin-bottom:8px}
+.agent-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+.agent-tag{display:inline-block;padding:3px 12px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.5px}
+.tag-blue{background:rgba(0,212,255,0.1);color:var(--accent);border:1px solid rgba(0,212,255,0.3)}
+.tag-green{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.3)}
+.tag-yellow{background:rgba(255,215,0,0.1);color:var(--yellow);border:1px solid rgba(255,215,0,0.3)}
+.tag-purple{background:rgba(157,78,221,0.1);color:var(--purple);border:1px solid rgba(157,78,221,0.3)}
+
+/* ── FEATURES SECTION ── */
+.features-section{background:linear-gradient(180deg,var(--bg),#040e1f,var(--bg))}
+.features-inner{max-width:1100px;margin:0 auto}
+.feature-row{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-bottom:80px}
+.feature-row.reverse{direction:rtl}.feature-row.reverse>*{direction:ltr}
+.feat-visual{background:rgba(10,30,53,0.6);border-radius:16px;padding:32px;border:1px solid rgba(0,212,255,0.1);position:relative;overflow:hidden}
+.feat-visual::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;pointer-events:none}
+.feat-v1::before{background:radial-gradient(circle,rgba(0,212,255,0.08),transparent 70%)}
+.feat-v2::before{background:radial-gradient(circle,rgba(0,255,136,0.08),transparent 70%)}
+.feat-v3::before{background:radial-gradient(circle,rgba(255,215,0,0.08),transparent 70%)}
+.feat-label{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.feat-title{font-size:clamp(20px,3vw,30px);font-weight:800;margin-bottom:14px;letter-spacing:-.5px;line-height:1.2}
+.feat-desc{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:20px}
+.feat-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.feat-list li{font-size:13px;color:var(--muted);display:flex;align-items:flex-start;gap:10px}
+.feat-list li::before{content:'✓';color:var(--green);font-weight:900;flex-shrink:0;margin-top:1px}
+
+/* ── MOCK SCREEN ── */
+.mock-screen{background:#020912;border-radius:12px;padding:16px;font-size:12px;font-family:monospace;color:#5a8aaa;line-height:1.8;min-height:160px}
+.mock-screen .ln{display:block}.mock-screen .k{color:var(--accent)}.mock-screen .v{color:var(--green)}.mock-screen .c{color:#3a5a7a}
+.mock-bar{height:8px;border-radius:99px;margin:4px 0;position:relative;overflow:hidden}
+.mock-bar-inner{height:100%;border-radius:99px;animation:loadBar 2s ease-in-out infinite alternate}
+@keyframes loadBar{from{opacity:.6}to{opacity:1}}
+
+/* ── TECH STACK ── */
+.tech-section{text-align:center;padding:80px 24px}
+.tech-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;max-width:800px;margin:40px auto}
+.tech-chip{padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;transition:all .2s}
+.chip-blue{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.3);color:var(--accent)}.chip-blue:hover{background:rgba(0,212,255,0.14)}
+.chip-green{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);color:var(--green)}.chip-green:hover{background:rgba(0,255,136,0.14)}
+.chip-yellow{background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);color:var(--yellow)}.chip-yellow:hover{background:rgba(255,215,0,0.14)}
+.chip-purple{background:rgba(157,78,221,0.08);border:1px solid rgba(157,78,221,0.3);color:var(--purple)}.chip-purple:hover{background:rgba(157,78,221,0.14)}
+
+/* ── CTA SECTION ── */
+.cta-section{text-align:center;padding:80px 24px 120px;position:relative;z-index:10}
+.cta-box{max-width:700px;margin:0 auto;background:linear-gradient(135deg,rgba(0,212,255,0.05),rgba(0,255,136,0.03));border:1px solid rgba(0,212,255,0.15);border-radius:24px;padding:60px 40px;position:relative;overflow:hidden}
+.cta-box::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:400px;height:400px;background:radial-gradient(circle,rgba(0,212,255,0.06),transparent 70%);pointer-events:none}
+.cta-title{font-size:clamp(28px,4vw,44px);font-weight:900;letter-spacing:-1px;margin-bottom:16px;line-height:1.1}
+.cta-sub{color:var(--muted);font-size:15px;margin-bottom:36px;line-height:1.7}
+.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+/* ── FOOTER ── */
+footer{position:relative;z-index:10;text-align:center;padding:32px 24px;border-top:1px solid rgba(0,212,255,0.08);color:var(--muted);font-size:12px}
+footer b{color:var(--accent)}
+
+/* ── ANIMATED COUNTERS ── */
+.count-up{display:inline-block}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .feature-row{grid-template-columns:1fr;gap:24px}.feature-row.reverse{direction:ltr}
+  nav{padding:0 20px}.nav-links a:not(.nav-cta){display:none}
+  .stat-item{min-width:120px}
+}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- Particle Canvas -->
+<canvas id="canvas"></canvas>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <div class="brand">⚡ Energy<span>Wise</span></div>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#agents">AI Agents</a>
+    <a href="#features">Features</a>
+    <a href="#tech">Tech Stack</a>
+    <a href="index.html" class="nav-cta">🚀 Launch App</a>
+  </div>
+  <div class="nav-pulse"></div>
+  <span class="theme-label" id="theme-label" style="margin-left:12px">🌙 Dark</span>
+  <button id="theme-btn" onclick="toggleTheme()" title="Switch background to light / dark"></button>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero" id="home">
+  <div class="hero-tag"><div class="dot"></div> IBM watsonx.ai · PS #20 · Multi-Agent System</div>
+
+  <h1>
+    <span class="line1">AI Agent for</span>
+    <span class="line2">Electricity Awareness</span>
+  </h1>
+
+  <p class="hero-sub">
+    An <b>IBM Granite-powered</b> multi-agent platform that analyses your household energy patterns,
+    explains tariffs in plain language, identifies vampire loads, and helps you
+    <b>save up to 35%</b> on your electricity bill.
+  </p>
+
+  <div id="typing-wrap">
+    <span class="prompt">EnergyWise &gt;</span>
+    <span id="typed"></span><span class="cursor"></span>
+  </div>
+
+  <div class="hero-btns">
+    <a href="index.html" class="btn-glow btn-primary">⚡ Launch Dashboard</a>
+    <a href="#agents" class="btn-glow btn-ghost">🤖 Meet the Agents</a>
+  </div>
+
+  <div class="stats-strip">
+    <div class="stat-item">
+      <div class="stat-icon">💡</div>
+      <div class="stat-num" style="color:var(--yellow)"><span class="count-up" data-target="35">0</span>%</div>
+      <div class="stat-label">Max Bill Savings</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">🏠</div>
+      <div class="stat-num" style="color:var(--accent)">₹<span class="count-up" data-target="6577">0</span></div>
+      <div class="stat-label">Avg Monthly Bill</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">🌱</div>
+      <div class="stat-num" style="color:var(--green)"><span class="count-up" data-target="82">0</span> kg</div>
+      <div class="stat-label">CO₂ Saved/100kWh</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">🤖</div>
+      <div class="stat-num" style="color:var(--purple)"><span class="count-up" data-target="4">0</span></div>
+      <div class="stat-label">AI Agents Active</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-num" style="color:var(--orange)"><span class="count-up" data-target="5">0</span>★</div>
+      <div class="stat-label">BEE Max Savings</div>
+    </div>
+  </div>
+
+  <div class="scroll-hint" style="margin-top:48px">
+    <span>Scroll</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ═══ PROBLEM ═══ -->
+<section class="problem-section" id="problem">
+  <div class="section-label reveal">The Challenge</div>
+  <h2 class="section-title reveal">Why Electricity Awareness Matters</h2>
+  <p class="section-sub reveal">Consumers face invisible barriers that lead to unnecessarily high utility bills and wasted energy — every single month.</p>
+
+  <div class="challenge-grid reveal">
+    <div class="challenge-card">
+      <div class="ch-icon">🔍</div>
+      <div class="ch-title">Hidden High Consumers</div>
+      <div class="ch-desc">Most households have no idea which appliances are silently draining the most electricity. Identifying the culprits requires expert-level analysis.</div>
+    </div>
+    <div class="challenge-card">
+      <div class="ch-icon">💰</div>
+      <div class="ch-title">Complex Tariff Structures</div>
+      <div class="ch-desc">Electricity tariff slabs, Time-of-Day pricing, and BEE Star ratings are opaque to everyday consumers. Most people overpay without realising it.</div>
+    </div>
+    <div class="challenge-card">
+      <div class="ch-icon">👻</div>
+      <div class="ch-title">Phantom / Standby Loads</div>
+      <div class="ch-desc">Devices in standby mode silently consume 5–10% of total electricity. This "vampire drain" costs ₹400–800/month with zero benefit.</div>
+    </div>
+    <div class="challenge-card">
+      <div class="ch-icon">⏰</div>
+      <div class="ch-title">Peak Hour Blindness</div>
+      <div class="ch-desc">Running heavy appliances during peak hours (6–9 AM, 5–9 PM) costs up to 20% more on ToD tariffs. Most consumers never shift loads.</div>
+    </div>
+    <div class="challenge-card">
+      <div class="ch-icon">📊</div>
+      <div class="ch-title">No Real-Time Insights</div>
+      <div class="ch-desc">Without personalised, real-time guidance, consumers receive their bill shocked — with no actionable path to reduce it next month.</div>
+    </div>
+    <div class="challenge-card">
+      <div class="ch-icon">🌍</div>
+      <div class="ch-title">Carbon Impact Invisible</div>
+      <div class="ch-desc">Every kWh emits 0.82 kg CO₂ in India's grid. Without tangible analogies, consumers feel no connection between their usage and climate impact.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ AGENTS ═══ -->
+<section class="agents-section" id="agents">
+  <div class="section-label reveal">The Solution</div>
+  <h2 class="section-title reveal">4-Agent IBM Granite System</h2>
+  <p class="section-sub reveal" style="margin:0 auto">Four specialised AI agents, each with a focused role — working together on IBM Langflow to give you complete energy intelligence.</p>
+
+  <div class="agents-grid">
+    <div class="agent-card blue reveal">
+      <span class="agent-emoji">📈</span>
+      <div class="agent-name">Consumption Analysis Agent</div>
+      <div class="agent-desc">Ingests hourly smart meter telemetry, identifies high-load periods, baselines standby draw, and flags anomalous spikes with +2σ statistical analysis.</div>
+      <span class="agent-tag tag-blue">Analysis · Anomaly Detection</span>
+    </div>
+    <div class="agent-card green reveal">
+      <span class="agent-emoji">🎓</span>
+      <div class="agent-name">Energy Education Agent</div>
+      <div class="agent-desc">Translates kWh numbers into relatable analogies — smartphones, trees, car kilometres. Explains BEE Stars, ENERGY STAR, tariff slabs, and ToD pricing.</div>
+      <span class="agent-tag tag-green">RAG · Knowledge Retrieval</span>
+    </div>
+    <div class="agent-card yellow reveal">
+      <span class="agent-emoji">💡</span>
+      <div class="agent-name">Energy Saving Agent</div>
+      <div class="agent-desc">Generates targeted, prioritised recommendations — thermostat tweaks, load shifting schedules, phantom load elimination, BEE upgrade ROI, and solar payback.</div>
+      <span class="agent-tag tag-yellow">Recommendations · ROI</span>
+    </div>
+    <div class="agent-card purple reveal">
+      <span class="agent-emoji">💬</span>
+      <div class="agent-name">Conversational Agent</div>
+      <div class="agent-desc">Natural language Q&amp;A powered by IBM Granite 13B. Answers billing questions, delivers budget forecasts, remembers conversation context for 6 turns.</div>
+      <span class="agent-tag tag-purple">IBM Granite · watsonx.ai</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="features-section" id="features">
+  <div class="features-inner">
+    <div style="text-align:center;margin-bottom:64px">
+      <div class="section-label reveal">Platform Capabilities</div>
+      <h2 class="section-title reveal">Everything You Need to<br/>Master Your Energy</h2>
+    </div>
+
+    <!-- Feature 1 -->
+    <div class="feature-row reveal">
+      <div>
+        <div class="feat-label" style="color:var(--accent)">📊 Visualisation Dashboard</div>
+        <h3 class="feat-title">Real-Time Energy<br/>Intelligence at a Glance</h3>
+        <p class="feat-desc">Monitor your household's hourly consumption, compare peak vs off-peak usage, track vampire standby waste, and progress toward your savings targets — all on one dashboard.</p>
+        <ul class="feat-list">
+          <li>Hourly consumption bar chart with peak-hour highlighting</li>
+          <li>7-day trend comparison and anomaly spikes</li>
+          <li>Category breakdown by appliance type</li>
+          <li>Reduction target progress tracker</li>
+        </ul>
+      </div>
+      <div class="feat-visual feat-v1">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:12px">HOURLY LOAD PROFILE</div>
+        <div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-bottom:14px">
+          <div style="flex:1;background:rgba(0,212,255,0.3);border-radius:3px 3px 0 0" data-h="30%"></div>
+          <div style="flex:1;background:rgba(0,212,255,0.3);border-radius:3px 3px 0 0" data-h="20%"></div>
+          <div style="flex:1;background:rgba(255,68,68,0.7);border-radius:3px 3px 0 0" data-h="75%"></div>
+          <div style="flex:1;background:rgba(255,68,68,0.7);border-radius:3px 3px 0 0" data-h="90%"></div>
+          <div style="flex:1;background:rgba(255,68,68,0.7);border-radius:3px 3px 0 0" data-h="80%"></div>
+          <div style="flex:1;background:rgba(0,212,255,0.4);border-radius:3px 3px 0 0" data-h="55%"></div>
+          <div style="flex:1;background:rgba(0,212,255,0.4);border-radius:3px 3px 0 0" data-h="45%"></div>
+          <div style="flex:1;background:rgba(0,212,255,0.3);border-radius:3px 3px 0 0" data-h="40%"></div>
+          <div style="flex:1;background:rgba(255,68,68,0.7);border-radius:3px 3px 0 0" data-h="95%"></div>
+          <div style="flex:1;background:rgba(255,68,68,0.7);border-radius:3px 3px 0 0" data-h="100%"></div>
+          <div style="flex:1;background:rgba(0,212,255,0.4);border-radius:3px 3px 0 0" data-h="60%"></div>
+          <div style="flex:1;background:rgba(0,212,255,0.3);border-radius:3px 3px 0 0" data-h="35%"></div>
+        </div>
+        <div style="display:flex;gap:16px;font-size:11px;color:var(--muted)"><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(255,68,68,0.7);border-radius:2px;display:inline-block"></span>Peak Hours</span><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(0,212,255,0.4);border-radius:2px;display:inline-block"></span>Normal</span></div>
+        <div style="margin-top:16px;padding:10px;background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.2);border-radius:8px;font-size:12px;color:#ffaaaa">⚠️ Spike detected at 5 PM — 2.1 kWh peak load</div>
+      </div>
+    </div>
+
+    <!-- Feature 2 -->
+    <div class="feature-row reverse reveal">
+      <div>
+        <div class="feat-label" style="color:var(--green)">💰 Tariff & RAG Knowledge</div>
+        <h3 class="feat-title">Understand Your Bill<br/>Down to the Paisa</h3>
+        <p class="feat-desc">The Energy Education Agent retrieves and explains BESCOM tariff slabs, Time-of-Day peak pricing, BEE Star ratings, and ENERGY STAR benchmarks — in language anyone can understand.</p>
+        <ul class="feat-list">
+          <li>BESCOM 5-slab tariff calculator (₹0–₹9/unit)</li>
+          <li>ToD pricing estimator with peak/off-peak split</li>
+          <li>BEE Star 1→5 savings comparison table</li>
+          <li>Carbon footprint in trees, cars, and phone charges</li>
+        </ul>
+      </div>
+      <div class="feat-visual feat-v2">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:12px">TARIFF SLAB BREAKDOWN</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--muted);width:90px">0–30 units</span><div style="flex:1;height:20px;background:rgba(0,255,136,0.25);border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:700;color:var(--green)">FREE</div></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--muted);width:90px">31–100 units</span><div style="flex:0.35;height:20px;background:rgba(0,212,255,0.25);border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:11px;color:var(--accent)">₹4.90</div></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--muted);width:90px">101–200 units</span><div style="flex:0.55;height:20px;background:rgba(255,215,0,0.2);border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:11px;color:var(--yellow)">₹6.90</div></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--muted);width:90px">201–500 units</span><div style="flex:0.75;height:20px;background:rgba(255,140,0,0.2);border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:11px;color:var(--orange)">₹8.05</div></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--muted);width:90px">500+ units</span><div style="flex:1;height:20px;background:rgba(255,68,68,0.2);border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:11px;color:var(--red)">₹9.00 ← you're here</div></div>
+        </div>
+        <div style="margin-top:14px;padding:10px;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:8px;font-size:12px;color:#88ffcc">💡 Reducing by 150 units saves you ₹2,700/month by dropping 2 slabs</div>
+      </div>
+    </div>
+
+    <!-- Feature 3 -->
+    <div class="feature-row reveal">
+      <div>
+        <div class="feat-label" style="color:var(--yellow)">💬 Conversational AI</div>
+        <h3 class="feat-title">Ask Anything, Get<br/>Instant Energy Answers</h3>
+        <p class="feat-desc">The Conversational Interaction Agent uses IBM Granite (ibm/granite-13b-chat-v2) to answer any electricity question — with your household profile as context and 6-turn conversation memory.</p>
+        <ul class="feat-list">
+          <li>Natural language Q&amp;A — no forms or menus</li>
+          <li>Bill forecasting and breakdown explanations</li>
+          <li>Appliance-specific energy queries</li>
+          <li>Suggested questions and conversation history</li>
+        </ul>
+      </div>
+      <div class="feat-visual feat-v3">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:12px">CONVERSATIONAL AI CHAT</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="align-self:flex-end;background:linear-gradient(135deg,#0d47a1,#1565c0);padding:8px 14px;border-radius:10px 10px 2px 10px;font-size:12px;max-width:80%">Why is my bill so high this month?</div>
+          <div style="align-self:flex-start;background:rgba(10,30,53,0.8);border:1px solid rgba(0,212,255,0.15);padding:10px 14px;border-radius:2px 10px 10px 10px;font-size:12px;max-width:85%;color:var(--text)"><div style="font-size:10px;color:var(--accent);font-weight:700;margin-bottom:4px">⚡ EnergyWise Agent</div>Your AC is running at 18°C for 10 hrs/day — that's 540 kWh/month = ₹4,050. Raising it to 24°C saves ₹1,350/month instantly!</div>
+          <div style="align-self:flex-end;background:linear-gradient(135deg,#0d47a1,#1565c0);padding:8px 14px;border-radius:10px 10px 2px 10px;font-size:12px;max-width:80%">What about my water heater?</div>
+          <div style="align-self:flex-start;background:rgba(10,30,53,0.8);border:1px solid rgba(0,212,255,0.15);padding:10px 14px;border-radius:2px 10px 10px 10px;font-size:12px;max-width:85%;color:var(--text)"><div style="font-size:10px;color:var(--accent);font-weight:700;margin-bottom:4px">⚡ EnergyWise Agent</div>Your 4kW heater at 3 hrs/day = 360 kWh extra! Set it to 49°C and use an off-peak timer — saves ₹900/month.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TECH STACK ═══ -->
+<section class="tech-section" id="tech">
+  <div class="section-label reveal">Tech Stack</div>
+  <h2 class="section-title reveal">Built on IBM's Most<br/>Powerful AI Platform</h2>
+  <div class="tech-chips reveal">
+    <span class="tech-chip chip-blue">🧠 IBM Granite 13B Chat v2</span>
+    <span class="tech-chip chip-blue">☁️ IBM watsonx.ai</span>
+    <span class="tech-chip chip-purple">🔗 IBM Langflow</span>
+    <span class="tech-chip chip-purple">🤖 IBM Orchestrate</span>
+    <span class="tech-chip chip-green">🐍 Python 3.14</span>
+    <span class="tech-chip chip-green">🌐 Streamlit UI</span>
+    <span class="tech-chip chip-yellow">📊 SVG Visualisation</span>
+    <span class="tech-chip chip-yellow">🔌 ibm-watsonx-ai SDK</span>
+    <span class="tech-chip chip-blue">💾 python-dotenv</span>
+    <span class="tech-chip chip-green">📦 pip / requirements.txt</span>
+  </div>
+</section>
+
+<!-- ═══ CTA ═══ -->
+<section class="cta-section">
+  <div class="cta-box reveal">
+    <div class="section-label" style="margin-bottom:16px">Ready?</div>
+    <h2 class="cta-title">Start Saving Energy<br/><span style="color:var(--accent)">Today</span></h2>
+    <p class="cta-sub">Launch the full EnergyWise dashboard — set up your household profile, run the AI analysis, and get your personalised saving plan in under 2 minutes.</p>
+    <div class="cta-btns">
+      <a href="index.html" class="btn-glow btn-primary">⚡ Launch Dashboard</a>
+      <a href="index.html#chat" class="btn-glow btn-ghost">💬 Chat with AI Agent</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <p>⚡ <b>EnergyWise</b> · Problem Statement #20 · AI Agent for Electricity Consumption Awareness</p>
+  <p style="margin-top:6px">Built with <b>IBM watsonx.ai</b> · IBM Granite · IBM Langflow · Python 3</p>
+</footer>
+
+<script>
+// ═══════════════ PARTICLE CANVAS ═══════════════
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+let W,H,particles=[],nodes=[],connections=[];
+
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;initParticles();}
+
+function initParticles(){
+  particles=[];nodes=[];connections=[];
+  const count=Math.min(80,Math.floor(W*H/18000));
+  for(let i=0;i<count;i++){
+    particles.push({
+      x:Math.random()*W,y:Math.random()*H,
+      vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,
+      r:Math.random()*2+1,
+      color:`hsla(${185+Math.random()*40},100%,${50+Math.random()*20}%,${.3+Math.random()*.4})`
+    });
+  }
+  // Electric grid nodes
+  const cols=Math.floor(W/180),rows=Math.floor(H/180);
+  for(let r=0;r<=rows;r++)for(let c=0;c<=cols;c++){
+    nodes.push({x:c*(W/cols),y:r*(H/rows),pulse:Math.random()*Math.PI*2,speed:.02+Math.random()*.02});
+  }
+}
+
+function drawLightning(x1,y1,x2,y2,alpha){
+  const segs=8;
+  const dx=(x2-x1)/segs,dy=(y2-y1)/segs;
+  ctx.beginPath();ctx.moveTo(x1,y1);
+  for(let i=1;i<segs;i++){
+    const jitter=(Math.random()-.5)*12*(1-i/segs);
+    ctx.lineTo(x1+dx*i+(Math.random()-.5)*8,y1+dy*i+jitter);
+  }
+  ctx.lineTo(x2,y2);
+  ctx.strokeStyle=`rgba(0,212,255,${alpha})`;
+  ctx.lineWidth=.5;ctx.stroke();
+}
+
+let frame=0;
+function animate(){
+  ctx.clearRect(0,0,W,H);
+  frame++;
+
+  // Moving particles + connections
+  particles.forEach((p,i)=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>W)p.vx*=-1;
+    if(p.y<0||p.y>H)p.vy*=-1;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.color;ctx.fill();
+    // Connect nearby
+    for(let j=i+1;j<particles.length;j++){
+      const q=particles[j];
+      const d=Math.hypot(p.x-q.x,p.y-q.y);
+      if(d<120){
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);
+        ctx.strokeStyle=`rgba(0,212,255,${.06*(1-d/120)})`;
+        ctx.lineWidth=.8;ctx.stroke();
+      }
+    }
+  });
+
+  // Grid nodes with glow
+  nodes.forEach(n=>{
+    n.pulse+=n.speed;
+    const alpha=(.2+Math.sin(n.pulse)*.15);
+    ctx.beginPath();ctx.arc(n.x,n.y,2,0,Math.PI*2);
+    ctx.fillStyle=`rgba(0,212,255,${alpha})`;ctx.fill();
+  });
+
+  // Occasional lightning bolt
+  if(frame%180===0){
+    const a=nodes[Math.floor(Math.random()*nodes.length)];
+    const b=nodes[Math.floor(Math.random()*nodes.length)];
+    if(a&&b)drawLightning(a.x,a.y,b.x,b.y,.15);
+  }
+
+  requestAnimationFrame(animate);
+}
+
+window.addEventListener('resize',resize);
+resize();animate();
+
+// ═══════════════ TYPING EFFECT ═══════════════
+const phrases=[
+  "Analysing your household consumption patterns...",
+  "Your AC accounts for 38.9% of your bill.",
+  "Shifting laundry to off-peak saves ₹480/month.",
+  "5-star AC upgrade ROI: 14 months.",
+  "Phantom loads detected: ₹620/month wasted.",
+  "Carbon footprint: 949 kg CO₂ → 542 trees needed.",
+  "Raising AC from 18°C → 24°C saves ₹1,350/month.",
+];
+let phraseIdx=0,charIdx=0,deleting=false;
+function typeLoop(){
+  const phrase=phrases[phraseIdx];
+  const el=document.getElementById('typed');
+  if(!deleting){
+    el.textContent=phrase.slice(0,++charIdx);
+    if(charIdx===phrase.length){setTimeout(()=>{deleting=true;typeLoop();},2200);return;}
+    setTimeout(typeLoop,38);
+  } else {
+    el.textContent=phrase.slice(0,--charIdx);
+    if(charIdx===0){deleting=false;phraseIdx=(phraseIdx+1)%phrases.length;setTimeout(typeLoop,400);return;}
+    setTimeout(typeLoop,18);
+  }
+}
+setTimeout(typeLoop,1000);
+
+// ═══════════════ COUNT-UP ANIMATION ═══════════════
+function countUp(el,target,duration=1600){
+  const start=performance.now();
+  const isFloat=String(target).includes('.');
+  function step(now){
+    const p=Math.min((now-start)/duration,1);
+    const ease=1-Math.pow(1-p,3);
+    const val=Math.round(ease*target);
+    el.textContent=isFloat?(ease*target).toFixed(1):val.toLocaleString('en-IN');
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ═══════════════ SCROLL REVEAL + COUNTER TRIGGER ═══════════════
+let countersTriggered=false;
+const revealEls=document.querySelectorAll('.reveal');
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target);}
+  });
+},{threshold:.12});
+revealEls.forEach(el=>observer.observe(el));
+
+// Trigger counters when stats strip visible
+const statsObserver=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting&&!countersTriggered){
+      countersTriggered=true;
+      document.querySelectorAll('.count-up').forEach(el=>{
+        countUp(el,parseFloat(el.dataset.target));
+      });
+    }
+  });
+},{threshold:.3});
+const strip=document.querySelector('.stats-strip');
+if(strip)statsObserver.observe(strip);
+
+// ═══════════════ BAR CHART ANIMATION ═══════════════
+window.addEventListener('load',()=>{
+  const bars=document.querySelectorAll('[data-h]');
+  setTimeout(()=>{
+    bars.forEach((b,i)=>setTimeout(()=>{b.style.height=b.dataset.h;},i*60));
+  },600);
+});
+
+// ═══════════════ THEME TOGGLE ═══════════════
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  const label=document.getElementById('theme-label');
+  label.textContent=isLight?'☀️ Light':'🌙 Dark';
+  // Update canvas particle colours for light mode
+  particles.forEach(p=>{
+    p.color=isLight
+      ? `hsla(${210+Math.random()*20},70%,${30+Math.random()*20}%,${.2+Math.random()*.3})`
+      : `hsla(${185+Math.random()*40},100%,${50+Math.random()*20}%,${.3+Math.random()*.4})`;
+  });
+  // Save preference
+  localStorage.setItem('ew-theme',isLight?'light':'dark');
+}
+// Restore saved preference on load
+(function(){
+  if(localStorage.getItem('ew-theme')==='light'){
+    document.body.classList.add('light');
+    const label=document.getElementById('theme-label');
+    if(label)label.textContent='☀️ Light';
+  }
+})();
+</script>
+</body>
+</html>

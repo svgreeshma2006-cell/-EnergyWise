@@ -1,0 +1,153 @@
+{
+  "id": "energywise-flow-v1",
+  "name": "EnergyWise AI Agent Flow",
+  "description": "IBM Langflow flow for Electricity Consumption Awareness AI Agent using IBM Granite model via watsonx.ai",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": "node-system-prompt",
+      "type": "SystemPromptNode",
+      "label": "EnergyWise System Prompt",
+      "data": {
+        "template": "You are EnergyWise, an expert AI Agent for Electricity Consumption Awareness. You help household users understand their electricity usage, identify wasteful habits, and adopt energy-efficient practices.\n\nYour capabilities:\n1. Analyse household electricity consumption data and identify high-usage areas.\n2. Explain energy concepts in simple, jargon-free language.\n3. Provide practical, prioritised energy-saving recommendations.\n4. Answer questions about appliances, bills, carbon footprint, and electricity tariffs.\n5. Motivate users with relatable comparisons and progress tracking.\n\nGuidelines:\n- Always be friendly, encouraging, and non-judgmental.\n- Use specific numbers and comparisons to make advice tangible.\n- Prioritise zero-cost behavioural tips first, then low-cost upgrades, then investments.\n- Keep responses concise but complete (100-250 words unless detail is requested).\n- End every response with one actionable next step the user can take today."
+      }
+    },
+    {
+      "id": "node-watsonx-llm",
+      "type": "WatsonxLLMNode",
+      "label": "IBM watsonx.ai (Granite)",
+      "data": {
+        "model_id": "ibm/granite-13b-chat-v2",
+        "url": "{WATSONX_URL}",
+        "api_key": "{WATSONX_API_KEY}",
+        "project_id": "{WATSONX_PROJECT_ID}",
+        "parameters": {
+          "max_new_tokens": 800,
+          "temperature": 0.7,
+          "top_p": 0.9,
+          "repetition_penalty": 1.1
+        }
+      }
+    },
+    {
+      "id": "node-memory",
+      "type": "ConversationBufferMemoryNode",
+      "label": "Conversation Memory",
+      "data": {
+        "memory_key": "chat_history",
+        "return_messages": true,
+        "k": 6
+      }
+    },
+    {
+      "id": "node-energy-tools",
+      "type": "ToolsNode",
+      "label": "Energy Analysis Tools",
+      "data": {
+        "tools": [
+          {
+            "name": "analyze_consumption",
+            "description": "Analyze household electricity consumption. Input: JSON with appliances list (name, wattage, daily_hours). Returns full analysis report.",
+            "python_code": "from modules.analysis import analyze_household\nfrom modules.energy_models import HouseholdProfile, ApplianceUsage\nimport json\ndef run(input_json: str) -> str:\n    data = json.loads(input_json)\n    profile = HouseholdProfile(name=data.get('name','Home'), city=data.get('city',''), occupants=data.get('occupants',3))\n    for a in data.get('appliances',[]):\n        profile.add_appliance(ApplianceUsage(**a))\n    report = analyze_household(profile)\n    return json.dumps(report, indent=2)"
+          },
+          {
+            "name": "get_energy_tips",
+            "description": "Get personalised energy saving tips based on consumption pattern. Input: analysis report JSON.",
+            "python_code": "from modules.suggestions import get_personalised_tips, format_tips_as_text\nimport json\ndef run(report_json: str) -> str:\n    report = json.loads(report_json)\n    tips = get_personalised_tips(report)\n    return format_tips_as_text(tips)"
+          },
+          {
+            "name": "calculate_appliance",
+            "description": "Calculate energy consumption for a single appliance. Input: name, wattage (W), daily_hours.",
+            "python_code": "from modules.analysis import calculate_single_appliance\nimport json\ndef run(input_json: str) -> str:\n    d = json.loads(input_json)\n    result = calculate_single_appliance(d['name'], float(d['wattage']), float(d['daily_hours']), int(d.get('quantity',1)))\n    return json.dumps(result)"
+          },
+          {
+            "name": "explain_carbon_impact",
+            "description": "Explain the CO2 carbon footprint of a given kWh usage.",
+            "python_code": "from modules.education import explain_carbon_impact\ndef run(kwh: str) -> str:\n    return explain_carbon_impact(float(kwh))"
+          },
+          {
+            "name": "get_energy_fact",
+            "description": "Get a random energy-saving fact or educational tip.",
+            "python_code": "from modules.education import get_random_fact\ndef run(_: str) -> str:\n    return get_random_fact()"
+          },
+          {
+            "name": "bust_energy_myth",
+            "description": "Bust a common electricity myth with factual information.",
+            "python_code": "from modules.education import get_myth_fact\nimport json\ndef run(_: str) -> str:\n    myth = get_myth_fact()\n    return f\"MYTH: {myth['myth']}\\nFACT: {myth['fact']}\""
+          },
+          {
+            "name": "peak_hour_guide",
+            "description": "Explain peak and off-peak electricity hours and how to shift loads.",
+            "python_code": "from modules.education import get_peak_hour_explanation\ndef run(_: str) -> str:\n    return get_peak_hour_explanation()"
+          },
+          {
+            "name": "seasonal_energy_tips",
+            "description": "Get energy-saving tips for a specific season: summer, winter, or monsoon.",
+            "python_code": "from modules.education import get_seasonal_tips\ndef run(season: str) -> str:\n    tips = get_seasonal_tips(season)\n    return '\\n'.join(f'{i+1}. {t}' for i,t in enumerate(tips))"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-intent-router",
+      "type": "RouterNode",
+      "label": "Intent Router",
+      "data": {
+        "routes": [
+          { "intent": "consumption_analysis", "keywords": ["analyse", "analyze", "consumption", "usage", "report"], "target_node": "node-energy-tools" },
+          { "intent": "energy_tips",          "keywords": ["tip", "suggest", "recommend", "save", "reduce"],       "target_node": "node-energy-tools" },
+          { "intent": "carbon_footprint",     "keywords": ["carbon", "co2", "emission", "environment"],            "target_node": "node-energy-tools" },
+          { "intent": "myth_busting",         "keywords": ["myth", "misconception", "true", "false"],              "target_node": "node-energy-tools" },
+          { "intent": "peak_hours",           "keywords": ["peak", "off-peak", "time", "schedule"],                "target_node": "node-energy-tools" },
+          { "intent": "general_qa",           "keywords": [],                                                       "target_node": "node-watsonx-llm"  }
+        ]
+      }
+    },
+    {
+      "id": "node-response-formatter",
+      "type": "OutputFormatterNode",
+      "label": "Response Formatter",
+      "data": {
+        "format": "markdown",
+        "add_next_step": true,
+        "footer": "\n\n---\n*💡 EnergyWise Agent | Powered by IBM watsonx.ai Granite*"
+      }
+    },
+    {
+      "id": "node-chat-input",
+      "type": "ChatInputNode",
+      "label": "User Chat Input",
+      "data": {
+        "placeholder": "Ask me about your electricity usage...",
+        "accept_types": ["text", "json"]
+      }
+    },
+    {
+      "id": "node-chat-output",
+      "type": "ChatOutputNode",
+      "label": "Agent Response Output",
+      "data": {
+        "show_avatar": true,
+        "agent_name": "EnergyWise"
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "node-chat-input",       "target": "node-intent-router" },
+    { "id": "e2", "source": "node-intent-router",     "target": "node-energy-tools",       "condition": "tool_required" },
+    { "id": "e3", "source": "node-intent-router",     "target": "node-watsonx-llm",         "condition": "general_qa" },
+    { "id": "e4", "source": "node-energy-tools",      "target": "node-watsonx-llm",         "label": "tool_output → LLM narration" },
+    { "id": "e5", "source": "node-system-prompt",     "target": "node-watsonx-llm" },
+    { "id": "e6", "source": "node-memory",            "target": "node-watsonx-llm" },
+    { "id": "e7", "source": "node-watsonx-llm",       "target": "node-response-formatter" },
+    { "id": "e8", "source": "node-response-formatter","target": "node-chat-output" },
+    { "id": "e9", "source": "node-chat-output",       "target": "node-memory",              "label": "store to memory" }
+  ],
+  "metadata": {
+    "created_by": "EnergyWise Team",
+    "ibm_model": "ibm/granite-13b-chat-v2",
+    "platform": "IBM Langflow / IBM Orchestrate",
+    "use_case": "PS-20 AI Agent for Electricity Consumption Awareness",
+    "langflow_version": ">=1.0.0"
+  }
+}
